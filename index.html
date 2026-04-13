@@ -1,0 +1,1188 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>🐸 Hành Trình Độ Kiếp Của Cóc | MLN111 FPT University</title>
+<meta name="description" content="Web Boardgame MLN111 – Triết học Mác-Lênin: Lượng-Chất & Nguyên nhân-Kết quả">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --or:#FF6B00;--or2:#FF8C33;--or3:#CC5500;--og:rgba(255,107,0,.32);
+  --bg:#09091d;--card:rgba(255,255,255,.045);--card2:rgba(255,255,255,.075);
+  --txt:#eeeeff;--txt2:rgba(225,225,255,.68);--muted:rgba(200,200,255,.38);
+  --bdr:rgba(255,255,255,.08);--bdr2:rgba(255,255,255,.14);
+  --gd:#22c55e;--rd:#ef4444;--au:#f59e0b;--bl:#60a5fa;
+  --C:82px
+}
+html{scroll-behavior:smooth}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;overflow-x:hidden;
+  background-image:radial-gradient(ellipse 65% 55% at 18% 18%,rgba(255,107,0,.08) 0%,transparent 70%),radial-gradient(ellipse 55% 65% at 82% 82%,rgba(99,102,241,.07) 0%,transparent 70%)}
+
+/* ── PARTICLES ── */
+#pts{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.pt{position:absolute;border-radius:50%;animation:ptf linear infinite}
+@keyframes ptf{0%{transform:translateY(105vh) rotate(0);opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translateY(-8vh) rotate(720deg);opacity:0}}
+#cfti{position:fixed;inset:0;pointer-events:none;z-index:300;overflow:hidden}
+.cf{position:absolute;top:-14px;animation:cff linear forwards}
+@keyframes cff{to{transform:translateY(110vh) rotate(900deg);opacity:0}}
+
+/* ── HEADER ── */
+header{text-align:center;padding:16px 20px 4px;position:relative;z-index:10}
+header h1{font-family:'Baloo 2',cursive;font-size:clamp(1.3rem,4vw,2.4rem);font-weight:800;
+  background:linear-gradient(135deg,var(--or) 0%,#FFD700 50%,var(--or2) 100%);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:hgl 3s ease-in-out infinite alternate}
+@keyframes hgl{from{filter:drop-shadow(0 0 8px var(--og))}to{filter:drop-shadow(0 0 24px rgba(255,107,0,.55))}}
+header p{font-size:.7rem;color:var(--muted);letter-spacing:2.5px;text-transform:uppercase;margin-top:3px}
+
+/* ── WRAP ── */
+.wrap{display:flex;flex-direction:column;align-items:center;padding:6px 12px 32px;gap:10px;position:relative;z-index:10}
+.board-outer{width:100%;overflow-x:auto;padding-bottom:4px}
+.board-outer::-webkit-scrollbar{height:4px}
+.board-outer::-webkit-scrollbar-thumb{background:var(--or);border-radius:2px}
+
+/* ── MONOPOLY BOARD 8×8 ── */
+.board{display:grid;grid-template-columns:repeat(8,var(--C));grid-template-rows:repeat(8,var(--C));
+  gap:4px;padding:8px;background:rgba(255,255,255,.02);
+  border:1px solid var(--bdr);border-radius:22px;
+  width:fit-content;margin:0 auto;
+  position:relative; /* anchor for overlay frog piece */
+  overflow:visible}
+
+/* ── CELLS ── */
+.cell{width:var(--C);height:var(--C);border-radius:8px;border:1px solid var(--bdr);
+  position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  transition:border-color .2s,box-shadow .2s}
+.cell .inner{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:3px}
+.side-right .inner{transform:rotate(0deg)}
+.side-top   .inner{transform:rotate(0deg)}
+.side-left  .inner{transform:rotate(0deg)}
+.cell-n{position:absolute;top:3px;left:4px;font-family:'Baloo 2',cursive;font-size:.5rem;font-weight:700;color:var(--muted);z-index:5;line-height:1}
+.cell-ic{font-size:1.25rem;line-height:1.1}
+.cell-nm{font-size:.38rem;text-align:center;color:var(--muted);line-height:1.2;max-height:2.6em;overflow:hidden;padding:0 2px}
+.side-corner .cell-ic{font-size:1.45rem}.side-corner .cell-nm{font-size:.42rem}
+.cell.start  {background:rgba(96,165,250,.12);border-color:rgba(96,165,250,.4)}
+.cell.finish {background:rgba(245,158,11,.14);border-color:rgba(245,158,11,.45);animation:finPulse 2s ease-in-out infinite}
+@keyframes finPulse{0%,100%{box-shadow:0 0 10px rgba(245,158,11,.28)}50%{box-shadow:0 0 24px rgba(245,158,11,.5)}}
+.cell.event_good{background:rgba(34,197,94,.07);border-color:rgba(34,197,94,.28)}
+.cell.event_bad {background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.28)}
+.cell.normal{background:var(--card)}
+.cell.active{border-color:var(--or)!important;box-shadow:0 0 20px var(--og),inset 0 0 12px rgba(255,107,0,.12)!important;z-index:5}
+
+/* ── OVERLAY JUMPING FROG PIECE ── */
+#pieceWrap{
+  position:absolute;z-index:30;pointer-events:none;
+  transform:translate(-50%,-60%); /* anchors at frog's foot */
+  will-change:left,top,transform;
+}
+.piece-scale{
+  width:88px;height:95px;
+  transform:scale(0.44);transform-origin:50% 85%;
+  /* 88*0.44≈39px wide, anchored at bottom-center */
+}
+/* Board frog: disable general body animation */
+#boardFrog3d{
+  animation:none!important;
+  filter:drop-shadow(0 5px 12px rgba(0,0,0,.6));
+}
+#boardFrog3d .fg-sh{animation:none!important;}
+/* Shadow stays small (not pulsing) */
+#boardFrog3d .fg-sh{opacity:.5;}
+/* But keep hat tassel and pupil animations */
+#boardFrog3d .fg-hat-tb{animation:tassle 1.8s ease-in-out infinite!important;}
+/* Landing squish */
+#boardFrog3d.sq-land{animation:boardLand 0.28s ease-out both!important;}
+@keyframes boardLand{
+  0%  {transform:scaleY(0.62) scaleX(1.28);}
+  55% {transform:scaleY(1.14) scaleX(0.9);}
+  100%{transform:none;}
+}
+/* Trail shadow during jump */
+.jump-trail{
+  position:absolute;z-index:24;pointer-events:none;
+  width:18px;height:6px;
+  background:radial-gradient(ellipse,rgba(255,107,0,.35),transparent 70%);
+  border-radius:50%;transform:translate(-50%,-50%);
+  animation:trailFade .4s ease-out both;
+}
+@keyframes trailFade{0%{opacity:.7;transform:translate(-50%,-50%) scaleX(1);}100%{opacity:0;transform:translate(-50%,-50%) scaleX(1.8);}}
+
+/* ── CENTER PANEL ── */
+#center{grid-row:2/8;grid-column:2/8;
+  background:radial-gradient(ellipse at center,rgba(255,107,0,.06) 0%,rgba(10,11,35,.8) 70%);
+  border:1px solid rgba(255,107,0,.13);border-radius:16px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:7px;padding:10px 14px;text-align:center}
+.ct-title{font-family:'Baloo 2',cursive;font-size:clamp(.75rem,1.7vw,1rem);font-weight:800;
+  background:linear-gradient(135deg,var(--or),#FFD700,var(--or2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.2}
+.ct-sub{font-size:.56rem;color:var(--muted);letter-spacing:1.8px;text-transform:uppercase}
+.ct-stats{display:grid;grid-template-columns:1fr 1fr;gap:5px;width:92%}
+.cs{background:var(--card);border:1px solid var(--bdr);border-radius:9px;padding:4px 8px;display:flex;flex-direction:column;align-items:center;gap:1px;transition:border-color .2s,box-shadow .2s}
+.cs.active{border-color:var(--or2);box-shadow:0 0 10px rgba(255,107,0,.4)}
+.cs-lbl{font-size:.52rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+.cs-val{font-family:'Baloo 2',cursive;font-size:1.1rem;font-weight:700;color:var(--or)}
+.cs-sub{font-size:.5rem;color:var(--txt2)}
+.mini-bar-track{width:100%;height:3px;border-radius:4px;background:rgba(255,255,255,.1);margin-top:2px;overflow:hidden}
+.mini-bar-fill{height:100%;background:linear-gradient(90deg,var(--or3),var(--or),#FFD700);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.ct-lvl{font-family:'Baloo 2',cursive;font-size:.78rem;font-weight:700;color:var(--or2);
+  background:rgba(255,107,0,.1);border:1px solid rgba(255,107,0,.2);border-radius:999px;padding:3px 13px}
+.ct-bar{width:92%}
+.ct-bar-lbl{display:flex;justify-content:space-between;font-size:.54rem;color:var(--muted);margin-bottom:3px}
+.ct-bar-track{height:7px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--bdr);overflow:hidden}
+.ct-bar-fill{height:100%;border-radius:999px;background:linear-gradient(90deg,var(--or3),var(--or),#FFD700);box-shadow:0 0 7px var(--og);transition:width .6s cubic-bezier(.4,0,.2,1)}
+.ct-dice-row{display:flex;align-items:center;gap:13px}
+.ct-hint{font-size:.6rem;color:var(--muted);height:12px}
+.ct-legend{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.lg{display:flex;align-items:center;gap:3px;font-size:.55rem;color:var(--txt2)}
+.ld{width:6px;height:6px;border-radius:50%}
+.ld-s{background:var(--bl)}.ld-f{background:var(--au)}.ld-g{background:var(--gd)}.ld-b{background:var(--rd)}
+.ct-log{width:92%;max-height:38px;overflow-y:auto;background:rgba(255,255,255,.03);border:1px solid var(--bdr);border-radius:8px;padding:4px 8px}
+.ct-log::-webkit-scrollbar{width:2px}.ct-log::-webkit-scrollbar-thumb{background:var(--or);border-radius:1px}
+.le{font-size:.62rem;color:var(--txt2);padding:1px 0;animation:lei .2s ease both}
+@keyframes lei{from{opacity:0;transform:translateY(-3px)}to{opacity:1}}
+.le.good{color:var(--gd)}.le.bad{color:var(--rd)}.le.sys{color:var(--au)}
+
+/* ── 3D DICE ── */
+.die-scene{width:82px;height:82px;perspective:310px;perspective-origin:55% 45%;flex-shrink:0;
+  filter:drop-shadow(0 5px 14px rgba(0,0,0,.55))}
+.die-cube{width:82px;height:82px;position:relative;transform-style:preserve-3d;
+  transform:rotateX(-28deg) rotateY(22deg);will-change:transform}
+.die-face{position:absolute;width:82px;height:82px;border-radius:13px;
+  background:linear-gradient(145deg,#1c1c44,#090920);
+  border:1.5px solid rgba(255,107,0,.5);
+  box-shadow:inset 2px 2px 8px rgba(255,255,255,.07),inset -2px -2px 8px rgba(0,0,0,.45),0 0 16px rgba(255,107,0,.22);
+  display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);padding:10px;gap:0;
+  align-items:center;justify-items:center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.die-face.f1{transform:translateZ(41px)}
+.die-face.f6{transform:rotateY(180deg) translateZ(41px)}
+.die-face.f2{transform:rotateY(90deg) translateZ(41px)}
+.die-face.f5{transform:rotateY(-90deg) translateZ(41px)}
+.die-face.f3{transform:rotateX(-90deg) translateZ(41px)}
+.die-face.f4{transform:rotateX(90deg) translateZ(41px)}
+.dot{width:12px;height:12px;border-radius:50%;
+  background:radial-gradient(circle at 32% 28%,#FFAA55,#FF4400);
+  box-shadow:0 0 6px rgba(255,107,0,.75),0 2px 4px rgba(0,0,0,.5)}
+.die-scene.landed{animation:dieLand .35s ease-out}
+@keyframes dieLand{0%{filter:drop-shadow(0 0 22px rgba(255,107,0,.9)) drop-shadow(0 5px 14px rgba(0,0,0,.55))}100%{filter:drop-shadow(0 5px 14px rgba(0,0,0,.55))}}
+
+/* ── ROLL BUTTON ── */
+.roll-btn{background:linear-gradient(135deg,var(--or),var(--or3));color:#fff;border:none;
+  border-radius:12px;padding:9px 16px;font-family:'Baloo 2',cursive;font-size:.9rem;font-weight:700;
+  cursor:pointer;transition:all .2s;box-shadow:0 4px 18px var(--og);position:relative;overflow:hidden;white-space:nowrap}
+.roll-btn::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.18),transparent);transform:translateX(-100%);transition:transform .35s}
+.roll-btn:hover:not(:disabled)::after{transform:translateX(100%)}
+.roll-btn:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 7px 26px rgba(255,107,0,.5)}
+.roll-btn:disabled{opacity:.45;cursor:not-allowed}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   3D CSS FROG CHARACTER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.frog-3d{position:relative;width:88px;height:95px;margin:0 auto;overflow:visible;
+  filter:drop-shadow(0 8px 20px rgba(0,0,0,.55));cursor:default}
+
+/* MOOD BODY ANIMATIONS */
+.mood-idle   {animation:mIdle 2s ease-in-out infinite}
+.mood-happy  {animation:mHappy .65s cubic-bezier(.34,1.56,.64,1) both}
+.mood-sad    {animation:mSad .85s ease-out both}
+.mood-excited{animation:mExcited .22s ease-in-out infinite}
+.mood-win    {animation:mWin 1.1s cubic-bezier(.34,1.56,.64,1) both}
+.mood-lose   {animation:mLose .9s ease both}
+@keyframes mIdle{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-7px) rotate(1.5deg)}}
+@keyframes mHappy{0%{transform:scale(.85) translateY(10px)}45%{transform:scale(1.22) translateY(-22px) rotate(8deg)}70%{transform:scale(1.05) translateY(-8px) rotate(-3deg)}100%{transform:scale(1) translateY(0)}}
+@keyframes mSad{0%{transform:translateY(0) scale(1)}35%{transform:translateY(11px) scale(.92,.87)}100%{transform:translateY(7px) scale(.94,.91) rotate(-3deg)}}
+@keyframes mExcited{0%,100%{transform:scale(1) rotate(-2.5deg) translateY(0)}50%{transform:scale(1.09) rotate(2.5deg) translateY(-5px)}}
+@keyframes mWin{0%{transform:scale(.4) rotate(-20deg);opacity:0}35%{transform:scale(1.38) rotate(12deg);opacity:1}60%{transform:scale(.88) rotate(-7deg)}80%{transform:scale(1.12) rotate(4deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes mLose{0%{transform:translateY(0) rotate(0)}30%{transform:translateY(14px) rotate(-12deg) scale(.85,.82)}100%{transform:translateY(10px) rotate(-8deg) scale(.88,.85)}}
+
+/* SHADOW */
+.fg-sh{position:absolute;bottom:2px;left:50%;transform:translateX(-50%);
+  width:50px;height:8px;background:radial-gradient(ellipse,rgba(0,0,0,.4),transparent 70%);
+  border-radius:50%;animation:shPulse 2s ease-in-out infinite}
+@keyframes shPulse{0%,100%{transform:translateX(-50%) scaleX(1);opacity:.7}50%{transform:translateX(-50%) scaleX(.65);opacity:.3}}
+
+/* LEGS */
+.fg-leg{position:absolute;bottom:14px;width:15px;height:13px;
+  background:linear-gradient(145deg,#2fa44e,#1e7a38);
+  border-radius:4px 4px 8px 8px;box-shadow:0 3px 6px rgba(0,0,0,.28);z-index:1;transition:transform .35s ease}
+.fg-leg.left {left:8px;transform:rotate(14deg)}
+.fg-leg.right{right:8px;transform:rotate(-14deg)}
+.mood-happy .fg-leg.left,.mood-win .fg-leg.left  {transform:rotate(28deg) translateY(2px)}
+.mood-happy .fg-leg.right,.mood-win .fg-leg.right {transform:rotate(-28deg) translateY(2px)}
+.mood-sad .fg-leg.left,.mood-lose .fg-leg.left    {transform:rotate(4deg) translateY(5px)}
+.mood-sad .fg-leg.right,.mood-lose .fg-leg.right  {transform:rotate(-4deg) translateY(5px)}
+
+/* BODY */
+.fg-body{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);
+  width:62px;height:47px;
+  background:radial-gradient(ellipse at 42% 32%,#42c461,#2fa44e 52%,#1f7a38);
+  border-radius:50% 50% 42% 42%/58% 58% 42% 42%;
+  box-shadow:0 6px 16px rgba(0,0,0,.35),inset -5px -7px 0 rgba(0,0,0,.12),inset 5px -3px 0 rgba(255,255,255,.08);z-index:2}
+.fg-belly{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);
+  width:38px;height:25px;background:linear-gradient(160deg,#cff0c5,#a8dea0);
+  border-radius:50%;box-shadow:inset 0 2px 5px rgba(255,255,255,.55)}
+
+/* ARMS */
+.fg-arm{position:absolute;top:45px;z-index:2;width:13px;height:22px;
+  background:linear-gradient(175deg,#2fa44e,#1a6830);
+  border-radius:6px 6px 8px 8px;box-shadow:0 3px 6px rgba(0,0,0,.25);
+  transform-origin:top center;transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+.fg-arm.left {left:9px;transform:rotate(22deg)}
+.fg-arm.right{right:9px;transform:rotate(-22deg)}
+.mood-happy .fg-arm.left,.mood-win .fg-arm.left  {transform:rotate(-55deg) translateY(-7px)}
+.mood-happy .fg-arm.right,.mood-win .fg-arm.right {transform:rotate(55deg) translateY(-7px)}
+.mood-sad .fg-arm.left,.mood-lose .fg-arm.left    {transform:rotate(48deg) translateY(4px)}
+.mood-sad .fg-arm.right,.mood-lose .fg-arm.right  {transform:rotate(-48deg) translateY(4px)}
+.mood-excited .fg-arm.left {animation:armWaveL .3s ease-in-out infinite}
+.mood-excited .fg-arm.right{animation:armWaveR .3s ease-in-out infinite}
+@keyframes armWaveL{0%,100%{transform:rotate(22deg)}50%{transform:rotate(0deg) translateY(-4px)}}
+@keyframes armWaveR{0%,100%{transform:rotate(-22deg)}50%{transform:rotate(0deg) translateY(-4px)}}
+
+/* HEAD */
+.fg-head{position:absolute;top:10px;left:50%;transform:translateX(-50%);
+  width:58px;height:50px;
+  background:radial-gradient(ellipse at 43% 39%,#42c461,#2fa44e 54%,#1e7a38);
+  border-radius:50%;
+  box-shadow:0 5px 14px rgba(0,0,0,.3),inset -4px -5px 0 rgba(0,0,0,.12),inset 3px -2px 0 rgba(255,255,255,.09);
+  z-index:3;transition:border-radius .3s}
+.mood-sad .fg-head,.mood-lose .fg-head{border-radius:50% 50% 45% 45%/40% 40% 60% 60%}
+
+/* EYE BUMPS */
+.fg-eb{position:absolute;top:-3px;width:22px;height:18px;
+  background:radial-gradient(ellipse at 42% 38%,#45ca65,#2a9045);
+  border-radius:50%;box-shadow:0 2px 7px rgba(0,0,0,.3);z-index:4;
+  transition:width .2s,height .2s,transform .25s}
+
+/* PLAYER COLORS (Multiplayer) */
+/* P1: Xanh Lá (Mặc định) */
+/* P2: Đỏ */
+.frog-p2 .fg-leg, .frog-p2 .fg-arm { background:linear-gradient(145deg,#f43f5e,#e11d48); }
+.frog-p2 .fg-body, .frog-p2 .fg-head { background:radial-gradient(ellipse at 43% 39%,#fb7185,#f43f5e 54%,#be123c); }
+.frog-p2 .fg-eb { background:radial-gradient(ellipse at 42% 38%,#fca5a5,#ef4444); }
+/* P3: Xanh Biển */
+.frog-p3 .fg-leg, .frog-p3 .fg-arm { background:linear-gradient(145deg,#3b82f6,#2563eb); }
+.frog-p3 .fg-body, .frog-p3 .fg-head { background:radial-gradient(ellipse at 43% 39%,#60a5fa,#3b82f6 54%,#1d4ed8); }
+.frog-p3 .fg-eb { background:radial-gradient(ellipse at 42% 38%,#93c5fd,#3b82f6); }
+/* P4: Vàng */
+.frog-p4 .fg-leg, .frog-p4 .fg-arm { background:linear-gradient(145deg,#eab308,#ca8a04); }
+.frog-p4 .fg-body, .frog-p4 .fg-head { background:radial-gradient(ellipse at 43% 39%,#facc15,#eab308 54%,#a16207); }
+.frog-p4 .fg-eb { background:radial-gradient(ellipse at 42% 38%,#fde047,#eab308); }
+.fg-eb.left {left:3px}
+.fg-eb.right{right:3px}
+.mood-excited .fg-eb{width:26px;height:22px;transform:translateY(-4px)}
+.mood-happy  .fg-eb{transform:translateY(-2px)}
+.mood-win    .fg-eb{transform:translateY(-4px);width:24px;height:20px}
+
+/* EYES (white) */
+.fg-eye{position:absolute;top:28%;left:50%;transform:translateX(-50%);
+  width:14px;height:14px;background:white;border-radius:50%;overflow:hidden;
+  transition:height .25s,border-radius .25s,overflow .25s}
+/* Happy squint crescent */
+.mood-happy .fg-eye{height:8px;border-radius:50% 50% 0 0/100% 100% 0 0;overflow:visible}
+.mood-happy .fg-pupil{display:none}
+/* Excited – big round eyes */
+.mood-excited .fg-eye{width:17px;height:17px}
+/* Win – star eyes */
+.mood-win .fg-eye{background:transparent;overflow:visible;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1}
+.mood-win .fg-eye::before{content:'⭐'}
+.mood-win .fg-pupil{display:none}
+/* Sad – normal but pupil low */
+
+/* PUPILS */
+.fg-pupil{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  width:9px;height:10px;background:radial-gradient(circle at 33% 28%,#333,#111);
+  border-radius:50%;transition:transform .2s,width .2s,height .2s}
+.fg-pupil::after{content:'';position:absolute;top:2px;left:2px;width:3px;height:3px;background:white;border-radius:50%}
+.mood-idle .fg-pupil{animation:pShift 4s ease-in-out infinite}
+@keyframes pShift{0%,100%{transform:translate(-50%,-50%)}25%{transform:translate(-52%,-47%)}75%{transform:translate(-48%,-53%)}}
+.mood-excited .fg-pupil{transform:translate(-50%,-44%);width:11px;height:12px}
+.mood-sad .fg-pupil,.mood-lose .fg-pupil{transform:translate(-50%,-38%)}
+
+/* NOSE */
+.fg-nose{position:absolute;bottom:17px;left:50%;transform:translateX(-50%);display:flex;gap:6px}
+.fg-nostril{width:4px;height:3px;background:rgba(0,80,20,.4);border-radius:50%}
+
+/* MOUTH */
+.fg-mouth{position:absolute;bottom:9px;left:50%;transform:translateX(-50%);transition:all .3s ease}
+.fg-mouth::before{content:'';display:block;width:22px;height:11px;
+  border-bottom:3.5px solid rgba(0,80,20,.5);border-radius:0 0 11px 11px}
+/* Happy: big grin */
+.mood-happy .fg-mouth::before{width:30px;height:15px;border-bottom:4.5px solid rgba(0,70,20,.6);border-radius:0 0 15px 15px}
+/* Sad/Lose: frown */
+.mood-sad   .fg-mouth{bottom:11px}
+.mood-lose  .fg-mouth{bottom:11px}
+.mood-sad .fg-mouth::before,.mood-lose .fg-mouth::before{border-bottom:none;border-top:3.5px solid rgba(0,80,20,.45);border-radius:11px 11px 0 0;height:11px}
+/* Excited: O */
+.mood-excited .fg-mouth::before{width:13px;height:13px;border:0;border:3px solid rgba(0,80,20,.5);border-radius:50%}
+/* Win: open big */
+.mood-win .fg-mouth{bottom:7px}
+.mood-win .fg-mouth::before{width:32px;height:15px;border:3.5px solid rgba(0,70,20,.5);border-top:0;border-radius:0 0 16px 16px;background:rgba(180,50,50,.3)}
+
+/* BLUSH */
+.fg-blush{position:absolute;bottom:14px;width:11px;height:7px;background:rgba(255,100,100,.3);border-radius:50%;opacity:0;transition:opacity .35s}
+.fg-blush.left{left:4px}.fg-blush.right{right:4px}
+.mood-happy .fg-blush,.mood-win .fg-blush{opacity:1}
+
+/* TEARS */
+.fg-tear{position:absolute;width:5px;height:9px;background:linear-gradient(180deg,rgba(120,190,255,.9),transparent);border-radius:50% 50% 40% 40%;opacity:0}
+.fg-tear.left{bottom:7px;left:8px}.fg-tear.right{bottom:7px;right:8px}
+.mood-sad .fg-tear,.mood-lose .fg-tear{opacity:1;animation:tearFall 1.2s ease-in .3s infinite}
+@keyframes tearFall{0%{transform:translateY(0);opacity:.9}100%{transform:translateY(14px);opacity:0}}
+
+/* SWEAT DROP (excited) */
+.fg-sweat{position:absolute;top:4px;right:6px;width:5px;height:8px;
+  background:linear-gradient(180deg,rgba(120,200,255,.85),transparent);
+  border-radius:50% 50% 50% 50%/30% 30% 70% 70%;
+  opacity:0;transition:opacity .2s}
+.mood-excited .fg-sweat{opacity:1;animation:sweatDrip .8s ease-in .4s infinite}
+@keyframes sweatDrip{0%{transform:translateY(0);opacity:.85}100%{transform:translateY(10px);opacity:0}}
+
+/* HAT */
+.fg-hat{position:absolute;top:-5px;left:50%;transform:translateX(-52%);z-index:5;transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+.mood-happy .fg-hat{transform:translateX(-52%) rotate(12deg) translateY(-6px)}
+.mood-win   .fg-hat{transform:translateX(-52%) rotate(-9deg) translateY(-9px)}
+.mood-excited .fg-hat{animation:hatShake .22s ease-in-out infinite}
+@keyframes hatShake{0%,100%{transform:translateX(-52%) rotate(-3deg)}50%{transform:translateX(-52%) rotate(4deg)}}
+.mood-lose .fg-hat{transform:translateX(-52%) rotate(28deg) translateY(4px)}
+.mood-sad  .fg-hat{transform:translateX(-52%) rotate(-5deg)}
+
+.fg-hat-tw{position:absolute;top:0;right:-2px}
+.fg-hat-tl{width:2px;height:13px;background:#FFD700;margin:0 auto}
+.fg-hat-tb{width:7px;height:7px;background:radial-gradient(circle at 35% 30%,#FFEE66,#D4A000);
+  border-radius:50%;margin:0 auto;box-shadow:0 1px 3px rgba(0,0,0,.4);animation:tassle 1.8s ease-in-out infinite}
+@keyframes tassle{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(16deg) translateX(4px)}}
+.fg-hat-top{width:32px;height:20px;background:linear-gradient(175deg,#FF7800,#CC5000);
+  margin:0 auto;border-radius:4px 4px 0 0;position:relative;
+  box-shadow:inset -3px -2px 0 rgba(0,0,0,.2),inset 2px 2px 0 rgba(255,255,255,.08)}
+.fg-hat-line{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:26px;height:2.5px;background:rgba(0,0,0,.22);border-radius:2px}
+.fg-hat-brim{width:50px;height:7px;background:linear-gradient(180deg,#FF9022,#CC5500);
+  border-radius:3px;position:relative;left:50%;transform:translateX(-50%);
+  box-shadow:0 3px 5px rgba(0,0,0,.3);margin-top:-1px}
+
+/* STARS / SPARKLES */
+.fg-spark{position:absolute;font-size:11px;color:#FFD700;opacity:0;pointer-events:none;line-height:1}
+.fg-spark:nth-child(1){top:14px;left:-16px}
+.fg-spark:nth-child(2){top:-8px;right:-15px}
+.fg-spark:nth-child(3){bottom:22px;right:-18px}
+.fg-spark:nth-child(4){top:5px;right:-20px}
+.mood-happy .fg-spark,.mood-win .fg-spark{animation:sparkPop .8s ease-out both}
+.mood-happy .fg-spark:nth-child(2),.mood-win .fg-spark:nth-child(2){animation-delay:.12s}
+.mood-happy .fg-spark:nth-child(3),.mood-win .fg-spark:nth-child(3){animation-delay:.22s}
+.mood-happy .fg-spark:nth-child(4),.mood-win .fg-spark:nth-child(4){animation-delay:.08s}
+@keyframes sparkPop{0%{opacity:0;transform:scale(0) rotate(-90deg)}45%{opacity:1;transform:scale(1.5) rotate(20deg)}100%{opacity:0;transform:scale(.7) rotate(45deg) translateY(-9px)}}
+
+/* MOOD LABEL UNDER FROG */
+.mood-label{font-size:.6rem;color:var(--or);font-weight:600;letter-spacing:.5px;margin-top:2px;min-height:12px;transition:all .25s}
+
+/* ── PHIL NOTE ── */
+.phil{text-align:center;font-size:.64rem;color:var(--muted);max-width:700px;font-style:italic}
+.phil strong{color:var(--or2)}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);backdrop-filter:blur(10px);
+  z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;animation:ovi .25s ease both}
+@keyframes ovi{from{opacity:0}to{opacity:1}}
+.overlay.hidden{display:none}
+.mcard{background:linear-gradient(135deg,#0e1032,#181048);border-radius:24px;padding:26px 24px 20px;
+  max-width:470px;width:100%;border:1px solid var(--bdr2);
+  box-shadow:0 24px 64px rgba(0,0,0,.55);animation:mci .38s cubic-bezier(.34,1.56,.64,1) both;position:relative;overflow:hidden}
+@keyframes mci{from{transform:scale(.72) translateY(28px);opacity:0}to{transform:none;opacity:1}}
+.mcard::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:24px 24px 0 0}
+.mcard.good::before{background:linear-gradient(90deg,var(--gd),#86efac)}
+.mcard.bad::before{background:linear-gradient(90deg,var(--rd),#fca5a5)}
+.mcard.win::before{background:linear-gradient(90deg,var(--au),#fff7ed,var(--au))}
+.mcard.lose::before{background:linear-gradient(90deg,var(--rd),#7f1d1d)}
+.m-emoji{display:block;font-size:2.8rem;text-align:center;margin-bottom:9px;animation:emj .45s cubic-bezier(.34,1.56,.64,1) .15s both}
+@keyframes emj{from{transform:scale(0) rotate(-180deg);opacity:0}to{transform:none;opacity:1}}
+.m-title{font-family:'Baloo 2',cursive;font-size:1.3rem;font-weight:800;text-align:center;margin-bottom:13px;line-height:1.2}
+.m-title.good{color:var(--gd)}.m-title.bad{color:var(--rd)}.m-title.win{color:var(--au)}.m-title.lose{color:var(--rd)}
+.phil-box{background:rgba(255,255,255,.04);border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-bottom:12px}
+.ph-row{display:flex;gap:9px;margin-bottom:7px;font-size:.8rem;align-items:flex-start}
+.ph-row:last-child{margin:0}
+.ph-lbl{font-weight:700;min-width:82px;flex-shrink:0;color:var(--or);font-size:.64rem;text-transform:uppercase;letter-spacing:.5px;padding-top:2px}
+.ph-txt{color:var(--txt2);line-height:1.55}
+.cons{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+.ctag{display:flex;align-items:center;gap:5px;padding:5px 12px;border-radius:999px;font-family:'Baloo 2',cursive;font-weight:700;font-size:.84rem}
+.ctag.pos{background:rgba(34,197,94,.14);border:1px solid rgba(34,197,94,.3);color:var(--gd)}
+.ctag.neg{background:rgba(239,68,68,.14);border:1px solid rgba(239,68,68,.3);color:var(--rd)}
+.m-msg{text-align:center;color:var(--txt2);font-size:.84rem;line-height:1.65;margin-bottom:12px}
+.m-frog{display:flex;justify-content:center;margin-bottom:9px}
+.m-frog svg{width:68px;height:68px;animation:mfp .45s cubic-bezier(.34,1.56,.64,1) .35s both}
+@keyframes mfp{from{transform:scale(0) rotate(-30deg)}to{transform:none}}
+.m-btn{width:100%;padding:11px;border-radius:12px;border:none;font-family:'Baloo 2',cursive;font-size:.9rem;font-weight:700;cursor:pointer;transition:all .2s;margin-top:8px}
+.m-btn:hover{transform:translateY(-2px);opacity:.9}
+.m-btn.orange{background:linear-gradient(135deg,var(--or),var(--or3));color:#fff;box-shadow:0 4px 18px var(--og)}
+.m-btn.green {background:linear-gradient(135deg,var(--gd),#16a34a);color:#fff}
+.m-btn.red   {background:linear-gradient(135deg,var(--rd),#b91c1c);color:#fff}
+
+/* ── RESPONSIVE ── */
+@media(max-width:780px){:root{--C:66px}}
+@media(max-width:620px){:root{--C:52px}.cell-ic{font-size:1rem}.cell-nm{display:none}.cs-val{font-size:.95rem}}
+@media(max-width:480px){:root{--C:42px}.ct-title{font-size:.7rem}.ct-sub{display:none}.ct-legend{display:none}}
+</style>
+</head>
+<body>
+<div id="pts"></div>
+<div id="cfti"></div>
+
+<header>
+  <h1>🐸 Hành Trình Độ Kiếp Của Cóc</h1>
+  <p>MLN111 · Triết Học Mác-Lênin · FPT University</p>
+</header>
+
+<main class="wrap">
+  <div class="board-outer">
+    <div class="board" id="board"></div>
+  </div>
+  <div class="phil">⚗️ Game mô phỏng <strong>Quy luật Lượng → Chất</strong> và <strong>Cặp phạm trù Nguyên nhân – Kết quả</strong> trong Triết học Mác-Lênin (MLN111)</div>
+</main>
+
+<!-- MODAL -->
+<div class="overlay hidden" id="overlay">
+  <div class="mcard" id="mcard">
+    <span class="m-emoji" id="mEmoji">🎯</span>
+    <h2 class="m-title" id="mTitle">Sự kiện!</h2>
+    <div class="phil-box" id="mPhilBox">
+      <div class="ph-row"><span class="ph-lbl">🔍 Nguyên nhân</span><span class="ph-txt" id="mCause"></span></div>
+      <div class="ph-row"><span class="ph-lbl">⚡ Kết quả</span><span class="ph-txt" id="mEffect"></span></div>
+      <div class="ph-row"><span class="ph-lbl">📚 Liên hệ TH</span><span class="ph-txt" id="mPhil"></span></div>
+    </div>
+    <div class="cons" id="mCons"></div>
+    <div class="m-msg" id="mMsg" style="display:none"></div>
+    <div class="m-frog" id="mFrog" style="display:none"></div>
+    <button class="m-btn orange" id="mBtn" onclick="closeModal()">✓ Tiếp tục hành trình!</button>
+  </div>
+</div>
+
+<script>
+/* ─────────────────────────────────────
+   SVG FROG (for modal/piece fallback)
+───────────────────────────────────── */
+const FROG=`<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+<ellipse cx="50" cy="68" rx="26" ry="18" fill="#2fa44e"/>
+<ellipse cx="50" cy="73" rx="17" ry="11.5" fill="#c5eabc"/>
+<ellipse cx="29" cy="82" rx="12" ry="6" fill="#2fa44e" transform="rotate(-18 29 82)"/>
+<ellipse cx="71" cy="82" rx="12" ry="6" fill="#2fa44e" transform="rotate(18 71 82)"/>
+<ellipse cx="19" cy="90" rx="8.5" ry="3.5" fill="#27933f"/>
+<ellipse cx="81" cy="90" rx="8.5" ry="3.5" fill="#27933f"/>
+<ellipse cx="50" cy="43" rx="24" ry="20" fill="#2fa44e"/>
+<ellipse cx="36" cy="34" rx="10.5" ry="10" fill="#2fa44e"/>
+<ellipse cx="64" cy="34" rx="10.5" ry="10" fill="#2fa44e"/>
+<circle cx="36" cy="33" r="7.5" fill="#eef8e6"/><circle cx="64" cy="33" r="7.5" fill="#eef8e6"/>
+<circle cx="36" cy="33" r="4.2" fill="#162016"/><circle cx="64" cy="33" r="4.2" fill="#162016"/>
+<circle cx="37.5" cy="31" r="1.8" fill="white"/><circle cx="65.5" cy="31" r="1.8" fill="white"/>
+<path d="M 39 52 Q 50 60 61 52" stroke="#27933f" stroke-width="2.3" fill="none" stroke-linecap="round"/>
+<polygon points="50,7 76,22 24,22" fill="#FF6B00"/>
+<rect x="32" y="20" width="36" height="9" rx="2" fill="#FF6B00"/>
+<rect x="32" y="20" width="36" height="3.5" rx="1.5" fill="#d45800"/>
+<line x1="76" y1="22" x2="79" y2="31" stroke="#FF6B00" stroke-width="2"/>
+<circle cx="79" cy="34" r="3" fill="#FFD700"/>
+</svg>`;
+
+/* 3D CSS FROG HTML */
+const FROG3D=`<div class="frog-3d mood-idle" id="frog3d">
+<div class="fg-sh"></div>
+<div class="fg-leg left"></div><div class="fg-leg right"></div>
+<div class="fg-body"><div class="fg-belly"></div></div>
+<div class="fg-arm left"></div><div class="fg-arm right"></div>
+<div class="fg-head">
+  <div class="fg-eb left"><div class="fg-eye left"><div class="fg-pupil"></div></div></div>
+  <div class="fg-eb right"><div class="fg-eye right"><div class="fg-pupil"></div></div></div>
+  <div class="fg-nose"><div class="fg-nostril"></div><div class="fg-nostril"></div></div>
+  <div class="fg-mouth"></div>
+  <div class="fg-blush left"></div><div class="fg-blush right"></div>
+  <div class="fg-tear left"></div><div class="fg-tear right"></div>
+  <div class="fg-sweat"></div>
+</div>
+<div class="fg-hat">
+  <div class="fg-hat-tw"><div class="fg-hat-tl"></div><div class="fg-hat-tb"></div></div>
+  <div class="fg-hat-top"><div class="fg-hat-line"></div></div>
+  <div class="fg-hat-brim"></div>
+</div>
+<div class="fg-spark">✦</div><div class="fg-spark">✦</div>
+<div class="fg-spark">✦</div><div class="fg-spark">💫</div>
+</div>`;
+
+/* ─────────────────────────────────────
+   BOARD DATA  (28 squares, 0-27)
+───────────────────────────────────── */
+const FINISH=27, WIN_TC=145;
+const boardData=[
+/*0*/ {t:"start",    ic:"🏫",nm:"XUẤT PHÁT",     lbl:"FPT University – Kỳ 1 bắt đầu!"},
+/*1*/ {t:"normal",   ic:"📋",nm:"Orientation",   lbl:"Tuần định hướng FPT, làm quen bạn bè."},
+/*2*/ {t:"event_bad",ic:"😴",nm:"Ngủ Quên Thi",
+       cause:"Cày game đến 4h sáng, bỏ qua thời gian biểu",
+       effect:"Trượt giữa kỳ Toán A1, nhận điểm F",
+       phil:"Nguyên nhân chủ quan (bỏ bê học tập) tất yếu sinh ra kết quả tương ứng – mối liên hệ nhân-quả khách quan.",
+       cr:-8,mv:-1},
+/*3*/ {t:"normal",  ic:"☕",nm:"Học Nhóm",       lbl:"Học nhóm tại Coffee House Xuân Hòa."},
+/*4*/ {t:"event_good",ic:"💻",nm:"Pass PRF192",
+       cause:"Nỗ lực cày code xuyên đêm, làm thêm bài tập mỗi ngày",
+       effect:"Pass Java PRF192 điểm A, cộng 15 tín chỉ",
+       phil:"Tích lũy về LƯỢNG (giờ luyện tập) đủ ngưỡng → bước nhảy về CHẤT (điểm A).",
+       cr:+15,mv:+1},
+/*5*/ {t:"normal",  ic:"🌱",nm:"Kỳ Hè",         lbl:"Nghỉ hè ngắn – nạp năng lượng!"},
+/*6*/ {t:"event_bad",ic:"💔",nm:"Trượt Vovinam",
+       cause:"Mải yêu đương, bỏ bê môn Vovinam bắt buộc",
+       effect:"Không đạt điều kiện thể chất, mất 8 tín chỉ",
+       phil:"Nguyên nhân (xao nhãng, thiếu trách nhiệm) tất yếu sinh kết quả (mất tín chỉ) – mối liên hệ phổ biến.",
+       cr:-8,mv:-1},
+/*7*/ {t:"normal",  ic:"🔁",nm:"Nghỉ Ngơi",     lbl:"Giao lộ – chuẩn bị leo lên tầng cao hơn!"},
+/*8*/ {t:"event_good",ic:"🏆",nm:"Gánh Team",
+       cause:"Chủ động gánh 80% đồ án nhóm chuyên ngành",
+       effect:"Thầy cô khen thưởng công khai, cộng 18 tín chỉ",
+       phil:"Nguyên nhân (nỗ lực vượt trội) tất yếu sinh kết quả xứng đáng.",
+       cr:+18,mv:+1},
+/*9*/ {t:"event_bad",ic:"😵",nm:"Chủ Quan Triết",
+       cause:"Nghĩ môn Triết dễ ợt, không thèm ôn bài",
+       effect:"Rớt MLN111, phải đăng ký học lại",
+       phil:"Chủ nghĩa duy tâm chủ quan – đánh giá sai thực tại khách quan.",
+       cr:-8,mv:-2},
+/*10*/{t:"event_good",ic:"🚀",nm:"Hackathon FPT",
+       cause:"Thức trắng 24h code cùng team trong FPT Hackathon",
+       effect:"Đạt Top 3, được mentor công nhận, cộng 18 tín chỉ",
+       phil:"Sự đột phá về CHẤT (giải Hackathon) là kết quả tất yếu của LƯỢNG (24h nỗ lực).",
+       cr:+18,mv:+1},
+/*11*/{t:"normal",  ic:"📖",nm:"Kỳ 5 Ổn",      lbl:"Tích lũy kiến thức chuyên ngành vững chắc."},
+/*12*/{t:"event_bad",ic:"📉",nm:"Trượt OJT",
+       cause:"Chỉ học kỹ thuật, bỏ qua soft skills và networking",
+       effect:"Không qua phỏng vấn OJT, mất cơ hội thực tập tốt",
+       phil:"Nhận thức phiến diện dẫn đến hậu quả toàn diện – nguyên tắc toàn diện triết học.",
+       cr:-10,mv:-1},
+/*13*/{t:"event_good",ic:"🎓",nm:"Học Bổng FPT",
+       cause:"Kiên trì duy trì GPA cao suốt 4 kỳ liên tiếp",
+       effect:"Nhận học bổng danh giá, giảm học phí, cộng 20 tín chỉ",
+       phil:"Tích lũy đủ LƯỢNG (GPA cao liên tục) → bước nhảy vọt về CHẤT (học bổng).",
+       cr:+20,mv:+2},
+/*14*/{t:"normal",  ic:"🌐",nm:"Nửa Đường",    lbl:"Đã qua nửa hành trình! Kiên trì lên!"},
+/*15*/{t:"event_bad",ic:"📋",nm:"Đạo Văn",
+       cause:"Lười biếng, copy paste báo cáo không chỉnh sửa",
+       effect:"Bị phát hiện, ăn 0 điểm cả môn, bị kỷ luật",
+       phil:"Hành vi gian dối (nguyên nhân) tất yếu đưa đến hậu quả nghiêm trọng.",
+       cr:-10,mv:-2},
+/*16*/{t:"event_good",ic:"🌍",nm:"CLB Techies",
+       cause:"Tích cực tham gia FPT Techies Club, đóng góp hoạt động",
+       effect:"Điểm rèn luyện cao, mở rộng network, cộng 15 tín chỉ",
+       phil:"Nguyên nhân (hoạt động cộng đồng chủ động) tạo kết quả kép: kỹ năng lẫn tín chỉ.",
+       cr:+15,mv:0},
+/*17*/{t:"normal",  ic:"☀️",nm:"Nghỉ Hè Lớn", lbl:"Kỳ nghỉ hè lớn – chuẩn bị nước rút!"},
+/*18*/{t:"event_bad",ic:"😰",nm:"Nợ TC PE",
+       cause:"Bỏ tiết thể dục liên tục, viện đủ lý do nghỉ học",
+       effect:"Bị giữ bằng tốt nghiệp, phải học lại PE thêm 1 kỳ",
+       phil:"Hành vi xao nhãng tích lũy (nguyên nhân kéo dài) gây hậu quả đúng lúc quyết định nhất.",
+       cr:-8,mv:-1},
+/*19*/{t:"normal",  ic:"🔁",nm:"Cua Góc",      lbl:"Giao lộ – bước vào chặng nước rút!"},
+/*20*/{t:"event_good",ic:"💼",nm:"Internship Xịn",
+       cause:"Chăm xây dựng portfolio, tự học framework ngoài giờ",
+       effect:"Nhận offer thực tập Big4, tích lũy kinh nghiệm, +18 tín chỉ",
+       phil:"Tích lũy LƯỢNG (kỹ năng + portfolio) → bước nhảy CHẤT (việc làm tốt).",
+       cr:+18,mv:+1},
+/*21*/{t:"normal",  ic:"📊",nm:"Prep Capstone", lbl:"Lên kế hoạch chọn topic capstone project."},
+/*22*/{t:"event_bad",ic:"💥",nm:"Bug Production",
+       cause:"Không test kỹ code, rush deploy lên production",
+       effect:"Hệ thống crash, mentor trừ điểm nặng, bị cảnh cáo",
+       phil:"Quy trình sai (nguyên nhân chủ quan) dẫn đến hậu quả khách quan không tránh khỏi.",
+       cr:-8,mv:-1},
+/*23*/{t:"event_good",ic:"🎯",nm:"Mentor Camp",
+       cause:"Tham gia FPT Mentor Camp, học từ alumni thành công",
+       effect:"Mở rộng network ngành, định hướng nghề nghiệp, +20 tín chỉ",
+       phil:"Nguyên nhân (chủ động kết nối) tạo kết quả lâu dài (định hướng sự nghiệp).",
+       cr:+20,mv:0},
+/*24*/{t:"normal",  ic:"🔥",nm:"Kỳ 9 Final",   lbl:"Kỳ cuối – bảo vệ Capstone gần kề!"},
+/*25*/{t:"event_good",ic:"🌟",nm:"EXE Thành Công",
+       cause:"Nghiên cứu thị trường kỹ, pivot đúng hướng trong EXE101",
+       effect:"Dự án được mentor đánh giá xuất sắc, gọi vốn seed, +15 tín chỉ",
+       phil:"Hành động đúng đắn (nguyên nhân) + điều kiện thuận lợi → kết quả đột phá về CHẤT.",
+       cr:+15,mv:+1},
+/*26*/{t:"normal",  ic:"⏳",nm:"Đếm Ngược",    lbl:"Sắp đến giờ bảo vệ Capstone rồi!"},
+/*27*/{t:"finish",  ic:"🏛️",nm:"BẢO VỆ\nCAPSTONE",lbl:"Khoảnh khắc quyết định! Đủ 145 tín chỉ chưa?"},
+];
+
+/* ─────────────────────────────────────
+   3D DICE CONFIG
+───────────────────────────────────── */
+const FACE_ROT={1:{x:0,y:0},2:{x:0,y:-90},3:{x:90,y:0},4:{x:-90,y:0},5:{x:0,y:90},6:{x:0,y:180}};
+const DOT_PAT={1:'000 010 000',2:'001 000 100',3:'001 010 100',4:'101 000 101',5:'101 010 101',6:'101 101 101'};
+
+/* ─────────────────────────────────────
+   GAME STATE
+───────────────────────────────────── */
+const PLAYERS=[{id:1,nm:"P1 Xanh",cls:"frog-p1",pos:0,cr:0,turns:0},{id:2,nm:"P2 Đỏ",cls:"frog-p2",pos:0,cr:0,turns:0},{id:3,nm:"P3 Biển",cls:"frog-p3",pos:0,cr:0,turns:0},{id:4,nm:"P4 Vàng",cls:"frog-p4",pos:0,cr:0,turns:0}];
+let curP=0;
+let isGameOver=false;
+let busy=false, modalCB=null;
+let cubeX=-28, cubeY=22;
+let currentMood='idle';
+
+/* Mood labels shown under the frog */
+const MOOD_LABELS={
+  idle:'😐 Sẵn sàng lên đường!',
+  happy:'😄 Tuyệt vời! Thắng rồi!',
+  sad:'😢 Ôi không... Thất bại!',
+  excited:'🤩 Tung xúc xắc nào!!!',
+  win:'🥳 Ta là Cóc Vương!!!',
+  lose:'😭 Chưa đủ tín chỉ rồi...'
+};
+
+/* ─────────────────────────────────────
+   MINI 3D BOARD FROG HTML
+───────────────────────────────────── */
+const FROG3D_BOARD=`<div class="frog-3d mood-excited" id="boardFrog3d">
+<div class="fg-sh"></div>
+<div class="fg-leg left"></div><div class="fg-leg right"></div>
+<div class="fg-body"><div class="fg-belly"></div></div>
+<div class="fg-arm left"></div><div class="fg-arm right"></div>
+<div class="fg-head">
+  <div class="fg-eb left"><div class="fg-eye"><div class="fg-pupil"></div></div></div>
+  <div class="fg-eb right"><div class="fg-eye"><div class="fg-pupil"></div></div></div>
+  <div class="fg-nose"><div class="fg-nostril"></div><div class="fg-nostril"></div></div>
+  <div class="fg-mouth"></div>
+</div>
+<div class="fg-hat">
+  <div class="fg-hat-tw"><div class="fg-hat-tl"></div><div class="fg-hat-tb"></div></div>
+  <div class="fg-hat-top"><div class="fg-hat-line"></div></div>
+  <div class="fg-hat-brim"></div>
+</div>
+</div>`;
+
+/* ─────────────────────────────────────
+   GRID POSITION (Monopoly 8×8)
+───────────────────────────────────── */
+function gridPos(i){
+  if(i<=7)  return{r:8,c:i+1};
+  if(i<=13) return{r:15-i,c:8};
+  if(i<=21) return{r:1,c:22-i};
+  return          {r:i-20,c:1};
+}
+function getSide(i){
+  if(i===0||i===7||i===14||i===21)return'corner';
+  if(i<=6)  return'bottom';
+  if(i<=13) return'right';
+  if(i<=20) return'top';
+  return'left';
+}
+
+/* ─────────────────────────────────────
+   SET FROG MOOD — 6 emotional states
+   idle | happy | sad | excited | win | lose
+───────────────────────────────────── */
+function setFrogMood(mood){
+  currentMood=mood;
+  const frog=document.getElementById('frog3d');
+  if(!frog)return;
+  frog.className=`frog-3d mood-${mood}`;
+  const lbl=document.getElementById('moodLabel');
+  if(lbl)lbl.textContent=MOOD_LABELS[mood]||'';
+}
+
+/* ─────────────────────────────────────
+   BUILD DICE FACES
+───────────────────────────────────── */
+function buildDiceFaces(){
+  const cube=document.getElementById('diceCube');
+  if(!cube)return;
+  [1,2,3,4,5,6].forEach(n=>{
+    const face=cube.querySelector(`.f${n}`);
+    if(!face)return;
+    const cells=DOT_PAT[n].replace(/ /g,'').split('');
+    face.innerHTML=cells.map(c=>c==='1'?'<span class="dot"></span>':'<span></span>').join('');
+  });
+}
+
+/* ─────────────────────────────────────
+   BUILD CENTER PANEL HTML
+───────────────────────────────────── */
+function buildCenter() {
+  return `
+  <div class="ct-title">🐸 Hành Trình Độ Kiếp Của Cóc (4P)</div>
+  <div class="ct-sub" id="turnIndicator">Đang tới lượt: ${PLAYERS[curP].nm}</div>
+  ${FROG3D}
+  <div class="mood-label" id="moodLabel">${MOOD_LABELS.idle}</div>
+  <div class="ct-stats" id="multiStats">
+    ${PLAYERS.map((p,i)=> `<div class="cs ${i===curP?'active':''}" id="st-p${p.id}"><div class="cs-lbl">${p.nm}</div><div class="cs-val" id="p${p.id}-cr">${p.cr} TC</div><div class="cs-sub" id="p${p.id}-pos">Ô ${p.pos}</div><div class="mini-bar-track"><div class="mini-bar-fill" id="p${p.id}-bar" style="width:${Math.min(100, (p.cr/WIN_TC)*100)}%"></div></div></div>`).join('')}
+  </div>
+  <div class="ct-dice-row">
+    <div class="die-scene" id="dieScene">
+      <div class="die-cube" id="diceCube">
+        <div class="die-face f1"></div><div class="die-face f2"></div>
+        <div class="die-face f3"></div><div class="die-face f4"></div>
+        <div class="die-face f5"></div><div class="die-face f6"></div>
+      </div>
+    </div>
+    <button class="roll-btn" id="rollBtn" onclick="rollDice()">🎲 ĐỔ XÚC XẮC</button>
+  </div>
+  <div class="ct-hint" id="rollHint">Nhấn để tung!</div>
+  <div class="ct-log" id="logEl"><div class="le sys">🎮 Game bắt đầu!</div></div>`;
+}
+
+
+/* ─────────────────────────────────────
+   RENDER BOARD
+───────────────────────────────────── */
+function renderBoard(){
+  const el=document.getElementById('board');
+  el.innerHTML='';
+  boardData.forEach((sq,i)=>{
+    const{r,c}=gridPos(i);
+    const side=getSide(i);
+    const div=document.createElement('div');
+    div.id=`c${i}`;div.className=`cell ${sq.t} side-${side}`;
+    div.style.gridRow=r;div.style.gridColumn=c;
+    div.title=`Ô ${i}: ${sq.nm}`;
+    const clean=sq.nm.replace(/\p{Emoji}/gu,'').trim();
+    div.innerHTML=`<span class="cell-n">${i}</span><div class="inner"><div class="cell-ic">${sq.ic}</div><div class="cell-nm">${clean}</div></div>`;
+    el.appendChild(div);
+  });
+  const ctr=document.createElement('div');
+  ctr.id='center';ctr.style.gridRow='2/8';ctr.style.gridColumn='2/8';
+  ctr.innerHTML=buildCenter();
+  el.appendChild(ctr);
+
+  // 4 player frogs overlay
+  PLAYERS.forEach(p => {
+    let pw = document.getElementById('pw-'+p.id);
+    if(!pw){
+      pw=document.createElement('div');pw.id='pw-'+p.id;pw.className='piece-wrap';
+      pw.style.position='absolute';pw.style.zIndex='30';pw.style.pointerEvents='none';pw.style.transform='translate(-50%,-60%)';pw.style.willChange='left,top,transform';
+      pw.innerHTML=`<div class="piece-scale ${p.cls}">${FROG3D_BOARD.replace('id="boardFrog3d"','id="bf3d-'+p.id+'"')}</div>`;
+      el.appendChild(pw);
+    }
+  });
+  // Position after layout settles
+  setTimeout(()=>{
+    placePlayer();
+  },80);
+}
+
+/* ─────────────────────────────────────
+   OVERLAY FROG – HELPERS
+───────────────────────────────────── */
+function getCellCenter(idx){
+  const cell=document.getElementById(`c${idx}`);
+  const board=document.getElementById('board');
+  if(!cell||!board)return null;
+  const cr=cell.getBoundingClientRect(),br=board.getBoundingClientRect();
+  return{x:cr.left-br.left+cr.width/2, y:cr.top-br.top+cr.height/2};
+}
+function placePieceAt(id,x,y){
+  const pw=document.getElementById(id);
+  if(!pw)return;
+  pw.style.left=x+'px';
+  pw.style.top=y+'px';
+}
+function spawnTrail(x,y){
+  const board=document.getElementById('board');
+  if(!board)return;
+  const t=document.createElement('div');t.className='jump-trail';
+  t.style.left=x+'px';t.style.top=y+'px';
+  board.appendChild(t);
+  setTimeout(()=>t.remove(),450);
+}
+/* Jump one step from fromIdx → toIdx, then call cb */
+function jumpStep(fromIdx,toIdx,cb){
+  const board=document.getElementById('board');
+  const pw=document.getElementById('pw-'+PLAYERS[curP].id);
+  if(!pw||!board){cb();return;}
+  const p1=getCellCenter(fromIdx),p2=getCellCenter(toIdx);
+  if(!p1||!p2){cb();return;}
+  const dx=p2.x-p1.x,dy=p2.y-p1.y;
+  const dist=Math.sqrt(dx*dx+dy*dy)||1;
+  const ARC=Math.min(dist*0.55,42); // parabola height
+  const DURATION=230;
+  const t0=performance.now();
+  function easeIO(t){return t<.5?2*t*t:-1+(4-2*t)*t;}
+  // Spawn a shadow trail
+  let trailTimer=setTimeout(()=>spawnTrail((p1.x+p2.x)/2,p2.y),DURATION*0.45);
+  function frame(now){
+    const t=Math.min((now-t0)/DURATION,1);
+    const p=easeIO(t);
+    const arc=Math.sin(t*Math.PI)*ARC;
+    const cx=p1.x+dx*p;
+    const cy=p1.y+dy*p-arc;
+    // Lean & squash-stretch
+    const leanDeg=(dx/dist)*22*Math.sin(t*Math.PI);   // lean in X direction
+    const stretchY=1+Math.sin(t*Math.PI)*0.22;         // taller at peak
+    const stretchX=1-Math.sin(t*Math.PI)*0.1;          // narrower at peak
+    pw.style.left=cx+'px';
+    pw.style.top=cy+'px';
+    pw.style.transform=`translate(-50%,-60%) rotate(${leanDeg}deg) scaleX(${stretchX}) scaleY(${stretchY})`;
+    if(t<1){requestAnimationFrame(frame);}
+    else{
+      clearTimeout(trailTimer);
+      pw.style.left=p2.x+'px';
+      pw.style.top=p2.y+'px';
+      pw.style.transform='translate(-50%,-60%)';
+      // Landing squish on the frog body
+      const bf=document.getElementById('bf3d-'+PLAYERS[curP].id);
+      if(bf){bf.classList.remove('sq-land');void bf.offsetWidth;bf.classList.add('sq-land');}
+      cb();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+/* placePlayer() now just syncs active cell + piece position (no DOM piece appended) */
+function placePlayer(){
+  document.querySelectorAll('.cell.active').forEach(e=>e.classList.remove('active'));
+  PLAYERS.forEach((p, idx) => {
+    const pCountOnSameCell = PLAYERS.filter(other => other.pos === p.pos).length;
+    const offsetIndex = PLAYERS.filter((other, i) => other.pos === p.pos && i < idx).length;
+    
+    // active state only for curP
+    if(idx===curP) {
+      const cell=document.getElementById(`c${p.pos}`);
+      if(cell)cell.classList.add('active');
+    }
+    
+    const center=getCellCenter(p.pos);
+    if(center){
+      let ox=center.x, oy=center.y;
+      if(pCountOnSameCell>1) {
+        const spread = 20;
+        const totalW = (pCountOnSameCell-1)*spread;
+        ox = center.x - totalW/2 + offsetIndex*spread;
+        oy = center.y + (offsetIndex%2===0?5:-5);
+      }
+      placePieceAt('pw-'+p.id, ox,oy);
+    }
+  });
+}
+
+/* ─────────────────────────────────────
+   UPDATE UI
+───────────────────────────────────── */
+function updateUI(){
+  const ti=document.getElementById('turnIndicator');
+  if(ti)ti.textContent=`Đang tới lượt: ${PLAYERS[curP].nm}`;
+  PLAYERS.forEach(p => {
+    const elCr=document.getElementById(`p${p.id}-cr`);
+    const elPos=document.getElementById(`p${p.id}-pos`);
+    const elBar=document.getElementById(`p${p.id}-bar`);
+    const wrap=document.getElementById(`st-p${p.id}`);
+    if(elCr)elCr.textContent=p.cr+' TC';
+    if(elPos)elPos.textContent='Ô '+p.pos;
+    if(elBar)elBar.style.width=Math.min(100,(p.cr/WIN_TC)*100)+'%';
+    if(wrap)wrap.className='cs '+(p.id===PLAYERS[curP].id?'active':'');
+  });
+}
+
+/* ─────────────────────────────────────
+   LOG
+───────────────────────────────────── */
+function addLog(msg,cls=''){
+  const el=document.getElementById('logEl');if(!el)return;
+  const d=document.createElement('div');d.className=`le ${cls}`;d.textContent=msg;
+  el.insertBefore(d,el.firstChild);
+  while(el.children.length>20)el.removeChild(el.lastChild);
+}
+
+/* ─────────────────────────────────────
+   SOUND
+───────────────────────────────────── */
+function beep(type){
+  try{
+    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    const o=ac.createOscillator(),g=ac.createGain();
+    o.connect(g);g.connect(ac.destination);
+    g.gain.setValueAtTime(.07,ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+.5);
+    if(type==='roll'){o.frequency.setValueAtTime(440,ac.currentTime);o.frequency.exponentialRampToValueAtTime(880,ac.currentTime+.18);}
+    else if(type==='good'){o.type='triangle';o.frequency.setValueAtTime(523,ac.currentTime);o.frequency.setValueAtTime(784,ac.currentTime+.15);}
+    else if(type==='bad'){o.frequency.setValueAtTime(300,ac.currentTime);o.frequency.exponentialRampToValueAtTime(180,ac.currentTime+.3);}
+    else if(type==='win'){o.type='triangle';o.frequency.setValueAtTime(659,ac.currentTime);o.frequency.setValueAtTime(1047,ac.currentTime+.25);}
+    o.start(ac.currentTime);o.stop(ac.currentTime+.55);
+  }catch(e){}
+}
+
+/* ─────────────────────────────────────
+   ANIMATE 3D DICE (physics-based)
+───────────────────────────────────── */
+function animateDice3D(result,onDone){
+  const cube=document.getElementById('diceCube');
+  if(!cube){onDone();return;}
+  const{x:tx,y:ty}=FACE_ROT[result];
+  const mod=(v,m)=>((v%m)+m)%m;
+  const dX=mod(tx-mod(cubeX,360),360)+720;
+  const dY=mod(ty-mod(cubeY,360),360)+720;
+  const startX=cubeX,startY=cubeY;
+  cubeX+=dX;cubeY+=dY;
+  const finalX=cubeX,finalY=cubeY;
+  const DURATION=1550,t0=performance.now();
+  function easeOutCubic(t){return 1-Math.pow(1-t,3);}
+  function frame(now){
+    const t=Math.min((now-t0)/DURATION,1);
+    const p=easeOutCubic(t);
+    const amp=Math.pow(1-t,1.6)*28;
+    const shX=Math.sin(t*38)*amp,shY=Math.sin(t*30+1.1)*amp;
+    cube.style.transform=`rotateX(${startX+(finalX-startX)*p+shX}deg) rotateY(${startY+(finalY-startY)*p+shY}deg)`;
+    if(t<1){requestAnimationFrame(frame);}
+    else{
+      cube.style.transform=`rotateX(${finalX}deg) rotateY(${finalY}deg)`;
+      const sc=document.getElementById('dieScene');
+      if(sc){sc.classList.remove('landed');void sc.offsetWidth;sc.classList.add('landed');}
+      onDone();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* ─────────────────────────────────────
+   ROLL DICE
+───────────────────────────────────── */
+function rollDice(){
+  if(busy)return;
+  busy=true;
+  PLAYERS[curP].turns++;
+  document.getElementById('rollBtn').disabled=true;
+  
+  beep('roll');
+  setFrogMood('excited'); // 😤 EXCITED while rolling
+
+  if(isGameOver)return;
+  const roll=Math.floor(Math.random()*6)+1;
+  const rh=document.getElementById('rollHint');
+  if(rh)rh.textContent='🎲 Đang tung xúc xắc 3D...';
+
+  animateDice3D(roll,()=>{
+    setFrogMood('idle'); // back to idle after dice lands
+    if(rh)rh.textContent=`✅ Tung được số ${roll}! Di chuyển ${roll} ô...`;
+    addLog(`🎲 Lượt ${PLAYERS[curP].turns}: tung được [${roll}]`);
+    setTimeout(()=>movePlayer(roll,false),280);
+  });
+}
+
+/* ─────────────────────────────────────
+   MOVE PLAYER — step-by-step jump animation
+───────────────────────────────────── */
+function movePlayer(steps,silent){
+  const from=PLAYERS[curP].pos;
+  let finalTo=PLAYERS[curP].pos+steps;
+  if(finalTo>=FINISH)finalTo=FINISH;
+  if(finalTo<0)finalTo=0;
+  const stepDir=steps>0?1:-1;
+  let cur=from;
+  const totalSteps=Math.abs(finalTo-from);
+  if(!silent)addLog(`📍 Ô ${from} → Ô ${finalTo}: ${boardData[finalTo].ic} ${boardData[finalTo].nm.replace(/\n/g,' ')}`);
+
+  function doStep(){
+    if(cur===finalTo){
+      // All hops complete
+      PLAYERS[curP].pos=finalTo;
+      document.querySelectorAll('.cell.active').forEach(e=>e.classList.remove('active'));
+      const fc=document.getElementById(`c${finalTo}`);
+      if(fc)fc.classList.add('active');
+      updateUI();
+      if(!silent){
+        setTimeout(()=>{
+          const sq=boardData[finalTo];
+          if(finalTo===FINISH){checkFinish();}
+          else if(sq.t==='event_good'||sq.t==='event_bad'){showEventModal(sq);}
+          else{
+            const rh=document.getElementById('rollHint');
+            if(rh)rh.textContent=`📍 ${sq.nm.replace(/\n/g,' ')} – Nhấn để tiếp tục!`;
+            busy=false;document.getElementById('rollBtn').disabled=false; nextTurn();
+          }
+        },380);
+      }
+      return;
+    }
+    const next=cur+stepDir;
+    // Highlight target cell
+    document.querySelectorAll('.cell.active').forEach(e=>e.classList.remove('active'));
+    const nc=document.getElementById(`c${next}`);
+    if(nc)nc.classList.add('active');
+    // Hop!
+    jumpStep(cur,next,()=>{
+      cur=next;
+      setTimeout(doStep,50); // brief pause between hops
+    });
+  }
+  doStep();
+}
+
+/* ─────────────────────────────────────
+   FINISH CHECK (Quy luật Lượng → Chất)
+───────────────────────────────────── */
+function checkFinish(){
+  if(PLAYERS[curP].cr>=WIN_TC){
+    addLog(`🎓 ${PLAYERS[curP].nm} CHIẾN THẮNG với ${PLAYERS[curP].cr} tín chỉ!`,'sys');
+    beep('win'); setFrogMood('win');
+    showWinModal();
+    isGameOver=true;
+  }else{
+    addLog(`❌ ${PLAYERS[curP].nm} thất bại! Mới ${PLAYERS[curP].cr}/${WIN_TC} TC. Về ô 0!`,'bad');
+    beep('bad'); setFrogMood('lose');
+    showLoseModal(PLAYERS[curP].cr);
+  }
+}
+function nextTurn() {
+  if(isGameOver) return;
+  curP = (curP+1)%PLAYERS.length;
+  updateUI();
+  setFrogMood('idle');
+  addLog(`-- Tới lượt: ${PLAYERS[curP].nm} --`);
+  placePlayer(); // update active cell glow
+}
+
+/* ─────────────────────────────────────
+   MODAL SYSTEM
+───────────────────────────────────── */
+function setModal({cardClass,emoji,title,titleClass,phil,msg,cons,btnClass,btnText,showFrog,cb}){
+  document.getElementById('mcard').className=`mcard ${cardClass}`;
+  document.getElementById('mEmoji').textContent=emoji;
+  const t=document.getElementById('mTitle');t.className=`m-title ${titleClass||''}`;t.textContent=title;
+  const pb=document.getElementById('mPhilBox');
+  if(phil){pb.style.display='block';document.getElementById('mCause').textContent=phil.cause;document.getElementById('mEffect').textContent=phil.effect;document.getElementById('mPhil').textContent=phil.note;}
+  else pb.style.display='none';
+  const cc=document.getElementById('mCons');cc.innerHTML='';
+  (cons||[]).forEach(({cls,txt})=>{const d=document.createElement('div');d.className=`ctag ${cls}`;d.textContent=txt;cc.appendChild(d);});
+  const mm=document.getElementById('mMsg');
+  if(msg){mm.style.display='block';mm.innerHTML=msg;}else mm.style.display='none';
+  const mf=document.getElementById('mFrog');
+  if(showFrog){mf.style.display='flex';mf.innerHTML=FROG;}else mf.style.display='none';
+  const btn=document.getElementById('mBtn');btn.className=`m-btn ${btnClass}`;btn.textContent=btnText;
+  modalCB=cb;
+  document.getElementById('overlay').classList.remove('hidden');
+}
+function closeModal(){
+  document.getElementById('overlay').classList.add('hidden');
+  if(modalCB){const f=modalCB;modalCB=null;f();}
+}
+
+/* ─────────────────────────────────────
+   EVENT MODAL
+───────────────────────────────────── */
+function showEventModal(sq){
+  const good=sq.t==='event_good';
+  beep(good?'good':'bad');
+  setFrogMood(good?'happy':'sad'); // 😄 or 😢
+
+  const cons=[];
+  if(sq.cr!==0)cons.push({cls:sq.cr>0?'pos':'neg',txt:(sq.cr>0?'📈 +':'📉 ')+sq.cr+' Tín chỉ'});
+  if(sq.mv!==0)cons.push({cls:sq.mv>0?'pos':'neg',txt:(sq.mv>0?'⏩ Tiến ':'⏪ Lùi ')+Math.abs(sq.mv)+' ô'});
+
+  setModal({
+    cardClass:good?'good':'bad',emoji:good?'✅':'⚠️',
+    title:sq.nm.replace(/\p{Emoji}/gu,'').replace(/\n/g,' ').trim(),titleClass:good?'good':'bad',
+    phil:{cause:sq.cause,effect:sq.effect,note:sq.phil},cons,
+    btnClass:good?'green':'red',btnText:good?'🎉 Tuyệt vời! Tiếp tục!':'😔 Chấp nhận! Tiếp tục!',
+    cb(){
+      setFrogMood('idle'); // reset mood after modal
+      const prev=PLAYERS[curP].cr;PLAYERS[curP].cr=Math.max(0,PLAYERS[curP].cr+sq.cr);updateUI();
+      const diff=PLAYERS[curP].cr-prev;
+      if(diff>0)addLog(`💰 +${diff} tín chỉ! Tổng: ${PLAYERS[curP].cr}`,'good');
+      else if(diff<0)addLog(`💸 ${diff} tín chỉ! Còn: ${PLAYERS[curP].cr}`,'bad');
+      if(sq.mv!==0){
+        setTimeout(()=>{
+          addLog(`${sq.mv>0?'⏩ Tiến':'⏪ Lùi'} thêm ${Math.abs(sq.mv)} ô!`,sq.mv>0?'good':'bad');
+          movePlayer(sq.mv,true);
+          setTimeout(()=>{busy=false;document.getElementById('rollBtn').disabled=false; nextTurn();
+            const rh=document.getElementById('rollHint');if(rh)rh.textContent='✓ Nhấn để tiếp tục!';},550);
+        },150);
+      }else{
+        busy=false;document.getElementById('rollBtn').disabled=false; nextTurn();
+        const rh=document.getElementById('rollHint');if(rh)rh.textContent='✓ Nhấn để tiếp tục!';
+      }
+    }
+  });
+}
+
+/* ─────────────────────────────────────
+   WIN MODAL
+───────────────────────────────────── */
+function showWinModal(){
+  setModal({
+    cardClass:'win',emoji:'🎓',title:'CHÚC MỪNG TỐT NGHIỆP! 🎉',titleClass:'win',
+    msg:`<p style="color:var(--au);font-weight:700;font-size:1rem;margin-bottom:10px">🧪 Quy luật Lượng → Chất thành hiện thực!</p>
+         <p>Bạn đã tích lũy đủ <strong style="color:var(--au)">${PLAYERS[curP].cr} tín chỉ (LƯỢNG)</strong> vượt ngưỡng <strong>145 tín chỉ</strong>.</p><br>
+         <p>Xảy ra <strong style="color:var(--gd)">bước nhảy vọt về CHẤT</strong>: Tiến hóa từ <em>Cóc Ranh</em> thành <strong style="color:var(--or)">Cóc Vương 👑</strong>!</p><br>
+         <p style="font-size:.75rem;color:var(--muted)">Lượt ${PLAYERS[curP].turns} | ${PLAYERS[curP].cr} tín chỉ</p>`,
+    showFrog:true,btnClass:'green',btnText:'🎓 Chơi lại từ đầu!',
+    cb(){setFrogMood('idle');resetGame();}
+  });
+  confetti();
+}
+
+/* ─────────────────────────────────────
+   LOSE MODAL
+───────────────────────────────────── */
+function showLoseModal(cr){
+  setModal({
+    cardClass:'lose',emoji:'💀',title:'CHƯA TỐT NGHIỆP ĐƯỢC!',titleClass:'lose',
+    msg:`<p style="color:var(--rd);font-weight:700;font-size:1rem;margin-bottom:10px">⚠️ Vi phạm Quy luật Lượng – Chất!</p>
+         <p>Bạn đang <strong style="color:var(--rd)">nóng vội</strong>. Mới có <strong style="color:var(--au)">${cr} tín chỉ</strong> mà đã đòi tốt nghiệp!</p><br>
+         <p>❌ Thiếu <strong>${WIN_TC-cr} tín chỉ</strong> – Chưa đủ LƯỢNG để nhảy vọt về CHẤT!</p><br>
+         <p style="font-size:.83rem;color:var(--txt2)">🔄 Bị đuổi về <strong>Ô 0</strong>, giữ nguyên <strong>${cr} tín chỉ</strong>. Tiếp tục!</p>`,
+    btnClass:'red',btnText:'🔄 Quay về vạch xuất phát!',
+    cb(){
+      setFrogMood('idle');
+      PLAYERS[curP].pos=0;placePlayer();updateUI();
+      addLog(`🔄 Vòng ${1}! Còn ${PLAYERS[curP].cr}/${WIN_TC} TC.`,'sys');
+      const rh=document.getElementById('rollHint');if(rh)rh.textContent='🔄 Vòng mới! Cố lên!';
+      busy=false;document.getElementById('rollBtn').disabled=false; nextTurn();
+    }
+  });
+}
+
+/* ─────────────────────────────────────
+   RESET
+───────────────────────────────────── */
+function resetGame(){
+  PLAYERS.forEach(p=>{p.pos=0; p.cr=0; p.turns=0;});
+  curP=0; isGameOver=false;
+  cubeX=-28;cubeY=22;
+  busy=false;
+  renderBoard();
+  buildDiceFaces();
+  const cube=document.getElementById('diceCube');
+  if(cube)cube.style.transform=`rotateX(${cubeX}deg) rotateY(${cubeY}deg)`;
+  setFrogMood('idle');
+  updateUI();
+  document.getElementById('rollBtn').disabled=false;
+  const rh=document.getElementById('rollHint');if(rh)rh.textContent='Nhấn để bắt đầu con đường tu tiên!';
+  const logEl=document.getElementById('logEl');
+  if(logEl)logEl.innerHTML='<div class="le sys">🎮 Game bắt đầu lại! Hành trình mới!</div>';
+}
+
+/* ─────────────────────────────────────
+   CONFETTI
+───────────────────────────────────── */
+function confetti(){
+  const c=document.getElementById('cfti');c.innerHTML='';
+  const cols=['#FF6B00','#FFD700','#22c55e','#60a5fa','#f472b6','#a78bfa','#fff'];
+  for(let i=0;i<90;i++){
+    const d=document.createElement('div');d.className='cf';
+    const sz=6+Math.random()*9;
+    d.style.cssText=`left:${Math.random()*100}%;background:${cols[i%cols.length]};width:${sz}px;height:${sz}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${2+Math.random()*3}s;animation-delay:${Math.random()*.8}s;`;
+    c.appendChild(d);
+  }
+  setTimeout(()=>c.innerHTML='',6000);
+}
+
+/* ─────────────────────────────────────
+   PARTICLES
+───────────────────────────────────── */
+function initParticles(){
+  const c=document.getElementById('pts');
+  for(let i=0;i<20;i++){
+    const p=document.createElement('div');p.className='pt';
+    const sz=1+Math.random()*3;
+    p.style.cssText=`left:${Math.random()*100}%;width:${sz}px;height:${sz}px;background:${Math.random()>.55?'rgba(255,107,0,.36)':'rgba(255,215,0,.26)'};animation-duration:${9+Math.random()*13}s;animation-delay:${Math.random()*9}s;`;
+    c.appendChild(p);
+  }
+}
+
+/* ─────────────────────────────────────
+   INIT
+───────────────────────────────────── */
+document.addEventListener('DOMContentLoaded',()=>{
+  initParticles();
+  renderBoard();
+  buildDiceFaces();
+  setFrogMood('idle');
+  updateUI();
+});
+</script>
+</body>
+</html>
