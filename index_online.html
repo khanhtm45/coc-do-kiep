@@ -144,6 +144,91 @@
       margin-top: 3px
     }
 
+    /* ── AUDIO TOGGLE ── */
+    .audio-ctrl {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+      background: var(--card);
+      border: 1px solid var(--bdr);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      font-size: 1.2rem;
+      color: var(--txt);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    .audio-ctrl:hover {
+      transform: scale(1.15) rotate(8deg);
+      border-color: var(--or);
+      box-shadow: 0 0 15px var(--og);
+    }
+    .audio-ctrl.off {
+      opacity: 0.6;
+      filter: grayscale(1);
+    }
+    .audio-ctrl.playing::after {
+      content: '';
+      position: absolute;
+      inset: -2px;
+      border: 2px solid var(--or);
+      border-radius: 50%;
+      animation: audioPulse 1.5s ease-out infinite;
+    }
+    @keyframes audioPulse {
+      0% { transform: scale(1); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
+    /* ── JUICE ANIMATIONS ── */
+    .shake { animation: shakeBoard 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+    @keyframes shakeBoard {
+      10%, 90% { transform: translate3d(-1px, 0, 0); }
+      20%, 80% { transform: translate3d(2px, 0, 0); }
+      30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+      40%, 60% { transform: translate3d(4px, 0, 0); }
+    }
+
+    .float-txt {
+      position: absolute;
+      pointer-events: none;
+      z-index: 1000;
+      font-weight: 800;
+      font-family: 'Baloo 2', cursive;
+      font-size: 1.2rem;
+      animation: floatUp 1.2s ease-out forwards;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+    }
+    .float-txt.pos { color: #4ade80; }
+    .float-txt.neg { color: #f87171; }
+    @keyframes floatUp {
+      0% { transform: translateY(0); opacity: 0; }
+      20% { transform: translateY(-20px); opacity: 1; }
+      100% { transform: translateY(-60px); opacity: 0; }
+    }
+
+    .sparkle {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: radial-gradient(circle, white 0%, transparent 60%);
+      border-radius: 50%;
+      animation: sparkleAnim 0.8s ease-out forwards;
+      opacity: 0;
+      z-index: 25;
+    }
+    @keyframes sparkleAnim {
+      0% { transform: scale(0); opacity: 1; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+
     /* ── WRAP ── */
     .wrap {
       display: flex;
@@ -2062,6 +2147,7 @@
   <div id="cfti"></div>
 
   <header>
+    <div id="audioToggle" class="audio-ctrl off" title="Bật/Tắt âm thanh">🔈</div>
     <h1>🐸 Hành Trình Độ Kiếp Của Cóc</h1>
     <p>MLN111 · Triết Học Mác-Lênin · FPT University</p>
   </header>
@@ -2499,6 +2585,7 @@
       const board = document.getElementById('board');
       const pw = document.getElementById('pw-' + PLAYERS[playerIdx].id);
       if (!pw || !board) { cb(); return; }
+      beep('hop');
       pw.dataset.animating = "true";
       const p1 = getCellCenter(fromIdx), p2 = getCellCenter(toIdx);
       if (!p1 || !p2) { cb(); return; }
@@ -2607,19 +2694,130 @@
     /* ─────────────────────────────────────
        SOUND
     ───────────────────────────────────── */
+    /* ─────────────────────────────────────
+       SOUND & JUICE ENGINE
+    ───────────────────────────────────── */
+    class AudioController {
+      constructor() {
+        this.ctx = null;
+        this.masterGain = null;
+        this.isMuted = true;
+        this.isPlaying = false;
+        this.osc = null;
+      }
+      init() {
+        if (this.ctx) return;
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this.masterGain = this.ctx.createGain();
+        this.masterGain.connect(this.ctx.destination);
+        this.masterGain.gain.value = 0.08;
+      }
+      toggle() {
+        this.init();
+        this.isMuted = !this.isMuted;
+        const btn = document.getElementById('audioToggle');
+        if (this.isMuted) {
+          btn.textContent = '🔈';
+          btn.classList.add('off');
+          btn.classList.remove('playing');
+          this.stopBGM();
+        } else {
+          btn.textContent = '🔊';
+          btn.classList.remove('off');
+          btn.classList.add('playing');
+          this.startBGM();
+        }
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+      }
+      startBGM() {
+        if (this.isPlaying) return;
+        this.isPlaying = true;
+        this.playNoteLoop();
+      }
+      stopBGM() {
+        this.isPlaying = false;
+      }
+      playNoteLoop() {
+        if (!this.isPlaying || this.isMuted) return;
+        const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+        const note = notes[Math.floor(Math.random() * notes.length)];
+        this.playTone(note, 0.4, 'sine', 0.05);
+        setTimeout(() => this.playNoteLoop(), 800);
+      }
+      playTone(freq, dur, type = 'sine', vol = 0.1) {
+        if (!this.ctx || this.isMuted) return;
+        const o = this.ctx.createOscillator();
+        const g = this.ctx.createGain();
+        o.type = type;
+        o.frequency.setValueAtTime(freq, this.ctx.currentTime);
+        g.gain.setValueAtTime(vol, this.ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + dur);
+        o.connect(g); g.connect(this.masterGain);
+        o.start(); o.stop(this.ctx.currentTime + dur);
+      }
+    }
+
+    const audio = new AudioController();
+
     function beep(type) {
-      try {
-        const ac = new (window.AudioContext || window.webkitAudioContext)();
-        const o = ac.createOscillator(), g = ac.createGain();
-        o.connect(g); g.connect(ac.destination);
-        g.gain.setValueAtTime(.07, ac.currentTime);
-        g.gain.exponentialRampToValueAtTime(.001, ac.currentTime + .5);
-        if (type === 'roll') { o.frequency.setValueAtTime(440, ac.currentTime); o.frequency.exponentialRampToValueAtTime(880, ac.currentTime + .18); }
-        else if (type === 'good') { o.type = 'triangle'; o.frequency.setValueAtTime(523, ac.currentTime); o.frequency.setValueAtTime(784, ac.currentTime + .15); }
-        else if (type === 'bad') { o.frequency.setValueAtTime(300, ac.currentTime); o.frequency.exponentialRampToValueAtTime(180, ac.currentTime + .3); }
-        else if (type === 'win') { o.type = 'triangle'; o.frequency.setValueAtTime(659, ac.currentTime); o.frequency.setValueAtTime(1047, ac.currentTime + .25); }
-        o.start(ac.currentTime); o.stop(ac.currentTime + .55);
-      } catch (e) { }
+      if (!audio.ctx || audio.isMuted) return;
+      const ac = audio.ctx;
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.connect(g); g.connect(audio.masterGain);
+      g.gain.setValueAtTime(0.3, ac.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.01, ac.currentTime + 0.4);
+
+      if (type === 'roll') {
+        o.frequency.setValueAtTime(440, ac.currentTime);
+        o.frequency.exponentialRampToValueAtTime(880, ac.currentTime + 0.12);
+      } else if (type === 'hop') {
+        o.type = 'sine';
+        o.frequency.setValueAtTime(600, ac.currentTime);
+        o.frequency.exponentialRampToValueAtTime(200, ac.currentTime + 0.1);
+      } else if (type === 'good') {
+        o.type = 'triangle';
+        o.frequency.setValueAtTime(523.25, ac.currentTime);
+        o.frequency.setValueAtTime(659.25, ac.currentTime + 0.1);
+        o.frequency.setValueAtTime(783.99, ac.currentTime + 0.2);
+      } else if (type === 'bad') {
+        o.type = 'sawtooth';
+        o.frequency.setValueAtTime(150, ac.currentTime);
+        o.frequency.exponentialRampToValueAtTime(50, ac.currentTime + 0.4);
+      } else if (type === 'win') {
+        o.type = 'square';
+        o.frequency.setValueAtTime(523, ac.currentTime);
+        o.frequency.setValueAtTime(659, ac.currentTime + 0.15);
+        o.frequency.setValueAtTime(1047, ac.currentTime + 0.3);
+      }
+      o.start(); o.stop(ac.currentTime + 0.5);
+    }
+
+    function shakeBoard() {
+      const b = document.querySelector('.board');
+      if (!b) return;
+      b.classList.remove('shake');
+      void b.offsetWidth;
+      b.classList.add('shake');
+      setTimeout(() => b.classList.remove('shake'), 400);
+    }
+
+    function spawnFloatingText(txt, type, x, y) {
+      const el = document.createElement('div');
+      el.className = `float-txt ${type}`;
+      el.textContent = txt;
+      el.style.left = x + 'px';
+      el.style.top = y + 'px';
+      document.querySelector('.board').appendChild(el);
+      setTimeout(() => el.remove(), 1200);
+    }
+
+    function spawnSparkle(x, y) {
+      const el = document.createElement('div');
+      el.className = 'sparkle';
+      el.style.left = (x - 40) + 'px';
+      el.style.top = (y - 40) + 'px';
+      document.querySelector('.board').appendChild(el);
+      setTimeout(() => el.remove(), 800);
     }
 
     /* ─────────────────────────────────────
@@ -2771,6 +2969,20 @@
     });
 
     socket.on('update_player_state', (pl) => {
+      // Juice: Detect credit changes for floating text
+      pl.forEach((newP, idx) => {
+        const oldP = PLAYERS[idx];
+        if (oldP && oldP.cr !== newP.cr) {
+          const diff = newP.cr - oldP.cr;
+          const txt = (diff > 0 ? '+' : '') + diff;
+          const center = getCellCenter(newP.pos);
+          if (center) {
+             spawnFloatingText(txt, diff > 0 ? 'pos' : 'neg', center.x, center.y);
+             if (diff > 0) spawnSparkle(center.x, center.y);
+          }
+        }
+      });
+
       // Don't close modal here if it's the active player's turn to decide
       PLAYERS = pl;
       updateUI();
@@ -3061,6 +3273,7 @@
     function showEventModal(sq) {
       const good = sq.t === 'event_good';
       beep(good ? 'good' : 'bad'); setFrogMood(good ? 'happy' : 'sad');
+      if (!good) shakeBoard();
       const cons = [];
       if (sq.cr !== 0) cons.push({ cls: sq.cr > 0 ? 'pos' : 'neg', txt: (sq.cr > 0 ? '📈 +' : '📉 ') + sq.cr + ' Tín chỉ' });
       if (sq.mv !== 0) cons.push({ cls: sq.mv > 0 ? 'pos' : 'neg', txt: (sq.mv > 0 ? '⏩ Tiến ' : '⏪ Lùi ') + Math.abs(sq.mv) + ' ô' });
@@ -3181,7 +3394,7 @@
 
     function handleGoJail() {
       const I_AM_RUNNING = (myPlayerId === PLAYERS[curP].id);
-      beep('bad'); setFrogMood('sad');
+      beep('bad'); setFrogMood('sad'); shakeBoard();
       
       setModal({
         cardClass: 'bad', emoji: '👮', title: 'BỊ CẢNH CÁO!',
@@ -3309,6 +3522,12 @@
     document.addEventListener('DOMContentLoaded', () => {
       initParticles();
       buildDiceFaces();
+      
+      const audioBtn = document.getElementById('audioToggle');
+      if (audioBtn) {
+        audioBtn.addEventListener('click', () => audio.toggle());
+      }
+      
       // renderBoard is now deferred until game_started socket event
       setFrogMood('idle');
       updateUI();
