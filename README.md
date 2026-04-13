@@ -4,6 +4,14 @@ Một trò chơi Boardgame trực tuyến (Multiplayer) mô phỏng hành trình
 
 ---
 
+## 🔗 Live Demo
+Bạn có thể xem trước bản chơi đơn (Offline) ngay tại đây:
+👉 **[https://khanhtm45.github.io/coc-do-kiep/](https://khanhtm45.github.io/coc-do-kiep/)**
+
+*(Lưu ý: Để chơi Online với bạn bè, bạn cần sử dụng link Render sau khi Deploy thành công ở Bước 2 bên dưới).*
+
+---
+
 ## 🚀 Hướng dẫn Deployment (Lên Online)
 
 Vì đây là trò chơi Multiplayer sử dụng **Node.js** và **Socket.io**, bạn không thể dùng GitHub Pages. Tôi khuyên bạn nên sử dụng **Render.com** (Miễn phí và cực kỳ dễ dùng).

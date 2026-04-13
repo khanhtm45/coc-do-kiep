@@ -508,7 +508,7 @@ const FROG3D=`<div class="frog-3d mood-idle" id="frog3d">
 /* ─────────────────────────────────────
    BOARD DATA  (28 squares, 0-27)
 ───────────────────────────────────── */
-const FINISH=27, WIN_TC=145;
+const FINISH=27, WIN_TC=100;
 const boardData=[
 /*0*/ {t:"start",    ic:"🏫",nm:"XUẤT PHÁT",     lbl:"FPT University – Kỳ 1 bắt đầu!"},
 /*1*/ {t:"normal",   ic:"📋",nm:"Orientation",   lbl:"Tuần định hướng FPT, làm quen bạn bè."},
@@ -597,7 +597,7 @@ const boardData=[
        phil:"Hành động đúng đắn (nguyên nhân) + điều kiện thuận lợi → kết quả đột phá về CHẤT.",
        cr:+15,mv:+1},
 /*26*/{t:"normal",  ic:"⏳",nm:"Đếm Ngược",    lbl:"Sắp đến giờ bảo vệ Capstone rồi!"},
-/*27*/{t:"finish",  ic:"🏛️",nm:"BẢO VỆ\nCAPSTONE",lbl:"Khoảnh khắc quyết định! Đủ 145 tín chỉ chưa?"},
+/*27*/{t:"finish",  ic:"🏛️",nm:"BẢO VỆ\nCAPSTONE",lbl:"Khoảnh khắc quyết định! Đủ 100 tín chỉ chưa?"},
 ];
 
 /* ─────────────────────────────────────
@@ -1095,7 +1095,7 @@ function showWinModal(){
   setModal({
     cardClass:'win',emoji:'🎓',title:'CHÚC MỪNG TỐT NGHIỆP! 🎉',titleClass:'win',
     msg:`<p style="color:var(--au);font-weight:700;font-size:1rem;margin-bottom:10px">🧪 Quy luật Lượng → Chất thành hiện thực!</p>
-         <p>Bạn đã tích lũy đủ <strong style="color:var(--au)">${PLAYERS[curP].cr} tín chỉ (LƯỢNG)</strong> vượt ngưỡng <strong>145 tín chỉ</strong>.</p><br>
+         <p>Bạn đã tích lũy đủ <strong style="color:var(--au)">${PLAYERS[curP].cr} tín chỉ (LƯỢNG)</strong> vượt ngưỡng <strong>100 tín chỉ</strong>.</p><br>
          <p>Xảy ra <strong style="color:var(--gd)">bước nhảy vọt về CHẤT</strong>: Tiến hóa từ <em>Cóc Ranh</em> thành <strong style="color:var(--or)">Cóc Vương 👑</strong>!</p><br>
          <p style="font-size:.75rem;color:var(--muted)">Lượt ${PLAYERS[curP].turns} | ${PLAYERS[curP].cr} tín chỉ</p>`,
     showFrog:true,btnClass:'green',btnText:'🎓 Chơi lại từ đầu!',
