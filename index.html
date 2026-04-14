@@ -149,7 +149,7 @@ header p{font-size:.7rem;color:var(--muted);letter-spacing:2.5px;text-transform:
   position: absolute;
   top: 20px;
   right: 20px;
-  z-index: 100;
+  z-index: 10005;
   background: var(--card);
   border: 1px solid var(--bdr);
   border-radius: 50%;
@@ -567,6 +567,21 @@ header p{font-size:.7rem;color:var(--muted);letter-spacing:2.5px;text-transform:
 .retro-font {
   font-family: 'Press Start 2P', 'Baloo 2', cursive;
 }
+.class-card {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 10px 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 90px;
+}
+.class-card:hover { background: rgba(255, 255, 255, 0.2); }
+.class-card.active {
+  border-color: #4ade80;
+  background: rgba(74, 222, 128, 0.2);
+  transform: scale(1.05);
+}
 </style>
 </head>
 <body>
@@ -575,15 +590,47 @@ header p{font-size:.7rem;color:var(--muted);letter-spacing:2.5px;text-transform:
   <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
     <div style="font-size:5rem; margin-bottom:10px;">🐸</div>
     <h1 class="retro-font" style="font-size: 2.2rem; color: #4ade80; text-shadow: 0 4px 10px rgba(74, 222, 128, 0.4); margin: 10px 0; line-height: 1.4;">HÀNH TRÌNH<br>ĐỘ KIẾP CỦA CÓC</h1>
-    <p style="font-size: 1.1rem; color: #9ca3af; max-width: 600px; margin-bottom: 40px; font-style: italic;">Một tựa game mô phỏng dựa trên 2 Nguyên lý của Phép biện chứng duy vật.</p>
+    <p style="font-size: 1.1rem; color: #9ca3af; max-width: 600px; margin-bottom: 20px; font-style: italic;">Một tựa game mô phỏng dựa trên 2 Nguyên lý của Phép biện chứng duy vật.</p>
     
+    <!-- Options section -->
+    <div style="display:flex; flex-direction:column; align-items:center; gap: 15px; margin-bottom: 25px;">
+      <!-- Character Selection -->
+      <div style="text-align:center;">
+        <h3 class="retro-font" style="font-size:0.9rem; color:#fff; margin-bottom:10px;">🎮 CHỌN HỆ CÓC</h3>
+        <div style="display:flex; gap:10px;">
+          <div class="class-card active" onclick="selectClass(this, 'IT')">
+            <div style="font-size:1.8rem">💻</div>
+            <div style="font-weight:bold; color:#4ade80; font-size: 0.9rem;">Cóc IT</div>
+          </div>
+          <div class="class-card" onclick="selectClass(this, 'Biz')">
+            <div style="font-size:1.8rem">📈</div>
+            <div style="font-weight:bold; color:#f59e0b; font-size: 0.9rem;">Cóc Biz</div>
+          </div>
+          <div class="class-card" onclick="selectClass(this, 'Art')">
+            <div style="font-size:1.8rem">🎨</div>
+            <div style="font-weight:bold; color:#ec4899; font-size: 0.9rem;">Cóc Art</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Difficulty -->
+      <div style="display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.5); padding:8px 15px; border-radius:10px; border: 1px solid #444;">
+        <label for="diffToggle" class="retro-font" style="font-size:0.75rem; color:#ef4444; cursor:pointer; text-shadow: 0 0 5px red;">CHẾ ĐỘ BÃO TÁP (HARDCORE)</label>
+        <input type="checkbox" id="diffToggle" class="hc-checkbox" style="transform: scale(1.5); cursor:pointer; accent-color: red;">
+      </div>
+    </div>
+
     <button onclick="startLanding()" class="roll-btn landing-btn retro-font" style="font-size: 1.2rem; padding: 15px 30px; background: linear-gradient(135deg, #ef4444, #b91c1c); letter-spacing: 2px;">BẮT ĐẦU ĐỘ KIẾP</button>
   </div>
 
-  <div style="display:flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center;">
+  <div style="display:flex; gap: 15px; margin-bottom: 40px; flex-wrap: wrap; justify-content: center;">
     <button onclick="showInfoModal('story')" class="roll-btn" style="background:#10b981; padding: 8px 15px; font-size: 0.9rem;">CỐT TRUYỆN</button>
     <button onclick="showInfoModal('rules')" class="roll-btn" style="background:#3b82f6; padding: 8px 15px; font-size: 0.9rem;">LUẬT CHƠI</button>
     <button onclick="showInfoModal('credits')" class="roll-btn" style="background:#f59e0b; padding: 8px 15px; font-size: 0.9rem;">THÔNG TIN</button>
+  </div>
+
+  <div style="position:absolute; bottom: 15px; width: 100%; text-align: center; color: #eab308; font-family: 'Baloo 2', cursive; font-size: 1.1rem; font-style: italic; padding: 0 20px;">
+    <span id="randomQuotes" style="transition: opacity 0.5s;">Sự phát triển đi theo đường xoắn ốc... Giống như việc bạn rớt PRF192 rồi học lại nhưng vẫn rớt tiếp.</span>
   </div>
 </div>
 
@@ -599,8 +646,32 @@ header p{font-size:.7rem;color:var(--muted);letter-spacing:2.5px;text-transform:
 </div>
 
 <script>
+  let selectedClass = 'IT';
+  function selectClass(el, cls) {
+    document.querySelectorAll('.class-card').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    selectedClass = cls;
+  }
+
+  const quotes = [
+    "Sự phát triển đi theo đường xoắn ốc... Giống như việc bạn rớt PRF192 rồi học lại nhưng vẫn rớt tiếp.",
+    "Vạn vật đều có mối liên hệ với nhau. Mất mạng Wifi ở trường liên hệ trực tiếp đến điểm F của bạn.",
+    "Lượng đổi thì Chất đổi. Tích đủ 145 tín chỉ thì bạn thành Cử nhân, tích đủ 5 lần điểm danh vắng thì bạn thành cựu sinh viên."
+  ];
+  setInterval(() => {
+    const el = document.getElementById('randomQuotes');
+    if (!el) return;
+    el.style.opacity = 0;
+    setTimeout(() => {
+      el.textContent = quotes[Math.floor(Math.random() * quotes.length)];
+      el.style.opacity = 1;
+    }, 500);
+  }, 4000);
+
   function startLanding() {
     if (typeof audio !== 'undefined' && audio.isMuted) audio.toggle();
+    localStorage.setItem('cocPlayerClass', selectedClass);
+    localStorage.setItem('cocHardcore', document.getElementById('diffToggle').checked);
     document.getElementById('landingPage').style.opacity = '0';
     setTimeout(() => document.getElementById('landingPage').style.display = 'none', 500);
   }
