@@ -2945,13 +2945,26 @@
       document.getElementById('roomCodeInput').value = code;
       joinRoom();
     });
-    socket.on('error_msg', msg => alert(msg));
+    
+    socket.on('error_msg', msg => {
+      alert(msg);
+      // Clear session so we don't get stuck trying to rejoin a dead room
+      sessionStorage.removeItem('cocRoomCode');
+      sessionStorage.removeItem('cocPlayerName');
+    });
+    
     socket.on('lobby_update', players => {
       document.getElementById('lobbyPlayers').style.display = 'block';
       document.getElementById('rCode').textContent = roomCodeInput.value.toUpperCase();
       const list = document.getElementById('lpList');
       list.innerHTML = players.map(p => `<div style="color:#fff">${p.nm} (${p.id})</div>`).join('');
-      myPlayerId = players.find(p => p.sid === socket.id)?.id;
+      
+      const myPlayer = players.find(p => p.sid === socket.id);
+      if (myPlayer) {
+        myPlayerId = myPlayer.id;
+        // Save the actual server-assigned name (e.g., 'P1 Xanh' if left blank)
+        sessionStorage.setItem('cocPlayerName', myPlayer.nm);
+      }
 
       if (players[0].sid === socket.id) {
         document.getElementById('startBtn').style.display = 'block';
