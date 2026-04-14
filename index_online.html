@@ -7,7 +7,7 @@
   <title>🐸 Hành Trình Độ Kiếp Của Cóc | MLN111 FPT University</title>
   <meta name="description" content="Web Boardgame MLN111 – Triết học Mác-Lênin: Lượng-Chất & Nguyên nhân-Kết quả">
   <link
-    href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Baloo+2:wght@400;600;700;800&family=Be+Vietnam+Pro:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
   <style>
     *,
@@ -2176,10 +2176,103 @@
     .hidden {
       display: none !important;
     }
+
+    /* Landing Page CSS */
+    @keyframes pulse-btn {
+      0% { transform: scale(1); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+      50% { transform: scale(1.05); box-shadow: 0 4px 30px rgba(239, 68, 68, 0.8); }
+      100% { transform: scale(1); box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+    }
+    .landing-btn {
+      animation: pulse-btn 1.5s infinite;
+    }
+    .retro-font {
+      font-family: 'Press Start 2P', 'Baloo 2', cursive;
+    }
   </style>
 </head>
 
 <body>
+  <!-- START MENU / LANDING PAGE -->
+  <div id="landingPage" style="position:fixed; inset:0; z-index:10000; background: linear-gradient(135deg, #0f172a, #1e1b4b); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding: 20px; transition: opacity 0.5s;">
+    <div style="flex:1; display:flex; flex-direction:column; justify-content:center; align-items:center;">
+      <div style="font-size:5rem; margin-bottom:10px;">🐸</div>
+      <h1 class="retro-font" style="font-size: 2.2rem; color: #4ade80; text-shadow: 0 4px 10px rgba(74, 222, 128, 0.4); margin: 10px 0; line-height: 1.4;">HÀNH TRÌNH<br>ĐỘ KIẾP CỦA CÓC</h1>
+      <p style="font-size: 1.1rem; color: #9ca3af; max-width: 600px; margin-bottom: 40px; font-style: italic;">Một tựa game mô phỏng dựa trên 2 Nguyên lý của Phép biện chứng duy vật.</p>
+      
+      <button onclick="startLanding()" class="roll-btn landing-btn retro-font" style="font-size: 1.2rem; padding: 15px 30px; background: linear-gradient(135deg, #ef4444, #b91c1c); letter-spacing: 2px;">BẮT ĐẦU ĐỘ KIẾP</button>
+    </div>
+
+    <div style="display:flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; justify-content: center;">
+      <button onclick="showInfoModal('story')" class="roll-btn" style="background:#10b981; padding: 8px 15px; font-size: 0.9rem;">CỐT TRUYỆN</button>
+      <button onclick="showInfoModal('rules')" class="roll-btn" style="background:#3b82f6; padding: 8px 15px; font-size: 0.9rem;">LUẬT CHƠI</button>
+      <button onclick="showInfoModal('credits')" class="roll-btn" style="background:#f59e0b; padding: 8px 15px; font-size: 0.9rem;">THÔNG TIN</button>
+    </div>
+  </div>
+
+  <!-- MENU MODALS -->
+  <div id="infoModal" class="overlay hidden" style="z-index: 10001;">
+    <div class="mcard" style="width:600px; max-width: 90vw; text-align: left;">
+      <h2 id="infoTitle" class="m-title retro-font" style="margin-bottom:20px; text-align: center; font-size:1.2rem;">...</h2>
+      <div id="infoContent" style="color: #e5e7eb; font-size: 1.05rem; line-height: 1.6; margin-bottom: 25px; max-height: 60vh; overflow-y: auto;">...</div>
+      <div style="text-align: center;">
+        <button onclick="document.getElementById('infoModal').classList.add('hidden')" class="roll-btn retro-font" style="background:#4b5563; font-size: 0.8rem;">ĐÓNG</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function startLanding() {
+      // Unmute audio immediately internally to bypass autoplay policy if possible
+      if (typeof audio !== 'undefined' && audio.isMuted) audio.toggle();
+      document.getElementById('landingPage').style.opacity = '0';
+      setTimeout(() => document.getElementById('landingPage').style.display = 'none', 500);
+    }
+
+    function showInfoModal(type) {
+      const titleEl = document.getElementById('infoTitle');
+      const contentEl = document.getElementById('infoContent');
+      
+      if (type === 'story') {
+        titleEl.textContent = 'CỐT TRUYỆN & TRIẾT LÝ';
+        titleEl.style.color = '#10b981';
+        contentEl.innerHTML = `
+          <p>Chào mừng Tân Sinh Viên đến với Làng Cóc! Tại đây, bạn không thể tự nhiên thức dậy và trở thành Cử Nhân được.</p><br>
+          <p>Dựa trên <strong style="color:#4ade80">Nguyên lý về Sự phát triển</strong>, vạn vật đều phải tích lũy từ từ. Nhiệm vụ của bạn là thu thập đủ <strong style="color:#f59e0b">145 Tín Chỉ</strong> (Tích lũy về LƯỢNG) để làm Đồ án Tốt nghiệp (Điểm NÚT) và biến thành Cóc Vương (Bước nhảy vọt về CHẤT).</p><br>
+          <p>Nhưng hãy cẩn thận! Dựa trên <strong style="color:#ef4444">Nguyên lý về Mối liên hệ phổ biến</strong>, mọi lựa chọn của bạn đều có luật Nhân - Quả. Thức khuya chơi game hôm nay có thể là Nguyên nhân khiến bạn tạch PE ngày mai. Hãy gieo nhân tốt để gặt quả ngọt!</p>
+        `;
+      } else if (type === 'rules') {
+        titleEl.textContent = 'LUẬT CHƠI';
+        titleEl.style.color = '#3b82f6';
+        contentEl.innerHTML = `
+          <ul style="padding-left: 20px; display: flex; flex-direction: column; gap: 12px; margin: 0;">
+            <li><strong style="color:#fff">1️⃣ Cách đi:</strong> Nhấn nút Đổ xúc xắc để di chuyển.</li>
+            <li><strong style="color:#4ade80">2️⃣ Ô màu Xanh:</strong> Bình yên vô sự, tiến bước an toàn.</li>
+            <li><strong style="color:#ef4444">3️⃣ Ô màu Đỏ (Sự kiện):</strong> Bốc thẻ Nhân - Quả, nhận Buff (Cộng điểm) hoặc Nerf (Trừ điểm/Lùi bước).</li>
+            <li><strong style="color:#f59e0b">4️⃣ Đích đến:</strong> Cán đích ô "Bảo Vệ Capstone" VỚI ĐIỀU KIỆN phải có <strong>>= 145 Tín chỉ</strong>. Nếu thiếu Lượng, bạn sẽ bị hệ thống "đá" về vạch xuất phát!</li>
+          </ul>
+        `;
+      } else if (type === 'credits') {
+        titleEl.textContent = 'THÔNG TIN NHÀ PHÁT TRIỂN';
+        titleEl.style.color = '#f59e0b';
+        contentEl.innerHTML = `
+          <div style="text-align: center;">
+            <p style="font-size: 1.3rem; font-weight: bold; color: #4ade80; margin-bottom: 5px;">Cóc Triết Gia Studio</p>
+            <p style="color: #9ca3af; margin-bottom: 15px;">Lớp / Khóa: MLN111_xxx</p>
+            <hr style="border-color: #374151; margin: 15px 0;">
+            <div style="display:inline-block; text-align:left;">
+              <p style="margin-bottom: 8px;"><strong style="color:#fff">Game Director & Kịch bản Triết:</strong> Tên bạn A</p>
+              <p style="margin-bottom: 8px;"><strong style="color:#fff">Lead Developer (Code chính):</strong> Tên bạn B</p>
+              <p style="margin-bottom: 8px;"><strong style="color:#fff">Art & UI Design:</strong> Tên bạn C</p>
+              <p style="margin-bottom: 8px;"><strong style="color:#fff">MC Thuyết trình:</strong> Tên bạn D</p>
+            </div>
+          </div>
+        `;
+      }
+      document.getElementById('infoModal').classList.remove('hidden');
+    }
+  </script>
+
   <div id="lobby" class="overlay">
     <div class="mcard" style="width:360px;text-align:center;">
       <h2 class="m-title" style="margin-bottom:15px">Tạo/Vào Phòng</h2>
