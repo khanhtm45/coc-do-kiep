@@ -78,6 +78,22 @@ io.on('connection', (socket) => {
     io.to(code).emit('lobby_update', room.players);
   });
 
+  socket.on('find_random_room', () => {
+    let foundCode = null;
+    for (const [code, room] of Object.entries(ROOMS)) {
+      if (!room.isPlaying && room.players.length < 4) {
+        foundCode = code;
+        break;
+      }
+    }
+    
+    if (foundCode) {
+      socket.emit('random_room_found', foundCode);
+    } else {
+      socket.emit('random_room_not_found');
+    }
+  });
+
   const disconnectTimers = {};
 
   // Rejoin: when a player refreshes during an active game

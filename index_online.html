@@ -2187,6 +2187,7 @@
         <input type="text" id="playerNameInput" placeholder="Tên của bạn (VD: Teo)" maxlength="12"
           style="padding:10px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;text-align:center;font-size:1.1rem;">
         <button class="roll-btn" onclick="createRoom()">Tạo phòng mới</button>
+        <button class="roll-btn" onclick="joinRandomRoom()" style="background:linear-gradient(135deg, #8b5cf6, #6d28d9);box-shadow:0 4px 18px rgba(139, 92, 246, 0.4);">Ghép phòng ngẫu nhiên</button>
         <div style="margin:10px 0;color:var(--muted)">hoặc</div>
         <input type="text" id="roomCodeInput" placeholder="Nhập mã phòng (VD: A1B2)"
           style="padding:10px;border-radius:8px;border:1px solid #444;background:#111;color:#fff;text-align:center;font-size:1.1rem;text-transform:uppercase;">
@@ -2948,6 +2949,11 @@
         socket.emit('join_room', { code, playerName: name });
       }
     }
+    function joinRandomRoom() {
+      const name = document.getElementById('playerNameInput').value.trim();
+      sessionStorage.setItem('cocPlayerName', name);
+      socket.emit('find_random_room');
+    }
     function startGame() { socket.emit('start_game'); }
     
     function leaveGame() {
@@ -2958,6 +2964,14 @@
         location.reload();
       }
     }
+
+    socket.on('random_room_found', code => {
+      document.getElementById('roomCodeInput').value = code;
+      joinRoom();
+    });
+    socket.on('random_room_not_found', () => {
+      createRoom();
+    });
 
     socket.on('room_created', code => {
       document.getElementById('roomCodeInput').value = code;
