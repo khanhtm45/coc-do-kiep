@@ -78,6 +78,8 @@ io.on('connection', (socket) => {
     io.to(code).emit('lobby_update', room.players);
   });
 
+  const disconnectTimers = {};
+
   // Rejoin: when a player refreshes during an active game
   socket.on('rejoin_room', ({ code, playerName }) => {
     code = code.toUpperCase();
@@ -90,6 +92,12 @@ io.on('connection', (socket) => {
     const player = room.players.find(p => p.nm === playerName);
     if (!player) {
       return socket.emit('error_msg', 'Không tìm thấy tên của bạn trong phòng!');
+    }
+
+    const timerId = code + '_' + player.id;
+    if (disconnectTimers[timerId]) {
+      clearTimeout(disconnectTimers[timerId]);
+      delete disconnectTimers[timerId];
     }
 
     // Update socket references
@@ -284,12 +292,30 @@ io.on('connection', (socket) => {
     console.log('User disconnected:', socket.id);
     const room = ROOMS[socket.roomId];
     if (room) {
-      // Instead of immediately deleting the player, we keep them in the room
-      // so if they F5, their slot is still available for rejoin_room.
-      
-      // We can broadcast that a player is offline, but for this board game,
-      // it's fine to just leave their slot intact to allow smooth reconnects.
-      io.to(socket.roomId).emit('lobby_update', room.players);
+      if (room.isPlaying) {
+        const pid = socket.playerId;
+        const timerId = socket.roomId + '_' + pid;
+        // Start 15s grace period before forcing them out
+        disconnectTimers[timerId] = setTimeout(() => {
+          const p = room.players.find(x => x.id === pid);
+          if (p && !p.leftGame) {
+             p.leftGame = true;
+             console.log(`[Disconnect] Player ${p.nm} timed out and left room ${room.id}`);
+             io.to(socket.roomId).emit('player_left', { pid: p.id, nm: p.nm });
+             
+             const active = room.players.filter(x => !x.leftGame);
+             if (active.length === 0) {
+               delete ROOMS[socket.roomId];
+             } else if (room.players[room.curP].id === p.id) {
+               advanceTurn(room);
+               io.to(socket.roomId).emit('turn_advanced', room.curP);
+             }
+          }
+        }, 15000); 
+      } else {
+        // Keep them in the lobby so F5 works.
+        io.to(socket.roomId).emit('lobby_update', room.players);
+      }
     }
   });
 });
