@@ -113,6 +113,49 @@ io.on('connection', (socket) => {
     }
   });
 
+  function advanceTurn(room) {
+    let attempts = 0;
+    do {
+      room.curP = (room.curP + 1) % room.players.length;
+      attempts++;
+    } while (room.players[room.curP].leftGame && attempts < room.players.length);
+  }
+
+  socket.on('next_turn', () => {
+    const room = ROOMS[socket.roomId];
+    if (room && room.isPlaying) {
+      advanceTurn(room);
+      io.to(socket.roomId).emit('turn_advanced', room.curP);
+    }
+  });
+
+  socket.on('leave_room', () => {
+    const room = ROOMS[socket.roomId];
+    if (room) {
+      if (room.isPlaying) {
+        const p = room.players.find(x => x.sid === socket.id);
+        if (p && !p.leftGame) {
+          p.leftGame = true;
+          io.to(socket.roomId).emit('player_left', { pid: p.id, nm: p.nm });
+          
+          const active = room.players.filter(x => !x.leftGame);
+          if (active.length === 0) {
+            delete ROOMS[socket.roomId];
+          } else if (room.players[room.curP].id === p.id) {
+            advanceTurn(room);
+            io.to(socket.roomId).emit('turn_advanced', room.curP);
+          }
+        }
+      } else {
+        // Lobby
+        room.players = room.players.filter(x => x.sid !== socket.id);
+        io.to(socket.roomId).emit('lobby_update', room.players);
+        if (room.players.length === 0) delete ROOMS[socket.roomId];
+      }
+      socket.leave(socket.roomId);
+    }
+  });
+
   socket.on('start_game', () => {
     const room = ROOMS[socket.roomId];
     if (room && room.players.length > 0) {

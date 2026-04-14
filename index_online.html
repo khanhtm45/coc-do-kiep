@@ -2207,6 +2207,7 @@
 
   <header>
     <div id="audioToggle" class="audio-ctrl off" title="Bật/Tắt âm thanh">🔈</div>
+    <button id="leaveBtn" onclick="leaveGame()" class="hidden" style="position:absolute; top:12px; right: 60px; padding: 6px 14px; background: linear-gradient(135deg, #ef4444, #991b1b); border-radius: 8px; color: white; border: none; font-family: 'Baloo 2', cursive; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4); z-index: 100;">Thoát</button>
     <h1>🐸 Hành Trình Độ Kiếp Của Cóc</h1>
     <p>MLN111 · Triết Học Mác-Lênin · FPT University</p>
   </header>
@@ -2688,8 +2689,10 @@
     function placePlayer() {
       document.querySelectorAll('.cell.active').forEach(e => e.classList.remove('active'));
       PLAYERS.forEach((p, idx) => {
-        const pCountOnSameCell = PLAYERS.filter(other => other.pos === p.pos).length;
-        const offsetIndex = PLAYERS.filter((other, i) => other.pos === p.pos && i < idx).length;
+        if (p.leftGame) return; // Skip piece for players who left
+        
+        const pCountOnSameCell = PLAYERS.filter(other => other.pos === p.pos && !other.leftGame).length;
+        const offsetIndex = PLAYERS.filter((other, i) => other.pos === p.pos && !other.leftGame && i < idx).length;
 
         // active state only for curP
         if (idx === curP) {
@@ -2719,7 +2722,7 @@
     ───────────────────────────────────── */
     function updateUI() {
       const ti = document.getElementById('turnIndicator');
-      if (ti) {
+      if (ti && PLAYERS[curP]) {
         const p = PLAYERS[curP];
         let status = '';
         if (p.skipTurns > 0) status = ` (Đang thi lại: ${p.skipTurns} lượt)`;
@@ -2730,12 +2733,18 @@
         const elPos = document.getElementById(`p${p.id}-pos`);
         const elBar = document.getElementById(`p${p.id}-bar`);
         const wrap = document.getElementById(`st-p${p.id}`);
-        if (elCr) elCr.textContent = p.cr + ' TC' + (p.skipTurns > 0 ? ' (🚫)' : '');
-        if (elPos) elPos.textContent = 'Ô ' + p.pos;
+        
+        let displayCr = p.cr + ' TC' + (p.skipTurns > 0 ? ' (🚫)' : '');
+        if (p.leftGame) displayCr = 'ĐÃ THOÁT';
+        
+        if (elCr) elCr.textContent = displayCr;
+        if (elPos) elPos.textContent = p.leftGame ? '-' : ('Ô ' + p.pos);
         if (elBar) elBar.style.width = Math.min(100, (p.cr / WIN_TC) * 100) + '%';
         if (wrap) {
           wrap.className = 'cs ' + (p.id === PLAYERS[curP].id ? 'active' : '');
-          if (p.skipTurns > 0) wrap.style.opacity = '0.6'; else wrap.style.opacity = '1';
+          if (p.leftGame) wrap.style.opacity = '0.2';
+          else if (p.skipTurns > 0) wrap.style.opacity = '0.6'; 
+          else wrap.style.opacity = '1';
         }
       });
     }
@@ -2940,6 +2949,15 @@
       }
     }
     function startGame() { socket.emit('start_game'); }
+    
+    function leaveGame() {
+      if (confirm('Bạn có chắc chắn muốn thoát phòng không?')) {
+        socket.emit('leave_room');
+        sessionStorage.removeItem('cocRoomCode');
+        sessionStorage.removeItem('cocPlayerName');
+        location.reload();
+      }
+    }
 
     socket.on('room_created', code => {
       document.getElementById('roomCodeInput').value = code;
@@ -2972,6 +2990,7 @@
     });
     socket.on('game_started', data => {
       document.getElementById('lobby').classList.add('hidden');
+      document.getElementById('leaveBtn').classList.remove('hidden');
       PLAYERS = data.players;
       curP = data.curP;
       renderBoard();
@@ -2988,6 +3007,7 @@
     socket.on('rejoin_state', data => {
       console.log('[Rejoin] Restoring game state...');
       document.getElementById('lobby').classList.add('hidden');
+      document.getElementById('leaveBtn').classList.remove('hidden');
       PLAYERS = data.players;
       curP = data.curP;
       myPlayerId = data.myPlayerId;
@@ -3009,6 +3029,22 @@
     });
 
     // ── IN-GAME NETWORK EVENTS ──
+
+    socket.on('player_left', data => {
+      const { pid, nm } = data;
+      addLog(`🚪 ${nm} đã thoát khỏi trò chơi!`, 'bad');
+      
+      const p = PLAYERS.find(x => x.id === pid);
+      if (p) p.leftGame = true;
+
+      const pw = document.getElementById('pw-' + pid);
+      if (pw) pw.style.display = 'none';
+
+      const st = document.getElementById('st-p' + pid);
+      if (st) st.style.opacity = '0.2';
+      
+      updateUI();
+    });
 
     socket.on('sync_force_move', (data) => {
       movePlayer(data.mv, true, data.pid);
