@@ -504,8 +504,56 @@ header p{font-size:.7rem;color:var(--muted);letter-spacing:2.5px;text-transform:
 
 /* ── RESPONSIVE ── */
 @media(max-width:780px){:root{--C:66px}}
-@media(max-width:620px){:root{--C:52px}.cell-ic{font-size:1rem}.cell-nm{display:none}.cs-val{font-size:.95rem}}
-@media(max-width:480px){:root{--C:42px}.ct-title{font-size:.7rem}.ct-sub{display:none}.ct-legend{display:none}}
+@media(max-width:620px){
+  :root{--C:50px}
+  .cell-ic{font-size:1rem}.cell-nm{display:none}.cs-val{font-size:.95rem}
+  header h1{font-size:1.2rem}header p{font-size:.6rem;letter-spacing:1.5px}
+  .audio-ctrl{width:34px;height:34px;font-size:1rem;top:14px;right:14px}
+}
+@media(max-width:480px){
+  :root{--C:42px}
+  body{font-size:13px}
+  header{padding:10px 12px 2px}header h1{font-size:1rem}header p{display:none}
+  .wrap{padding:4px 4px 20px;gap:6px}
+  .board{gap:2px;padding:4px;border-radius:14px}
+  .cell{border-radius:5px}.cell-ic{font-size:.85rem}.cell-lbl{display:none}
+  .ct-title{font-size:.6rem}.ct-sub{display:none}.ct-legend{display:none}
+  .ct-stats{gap:3px}.cs{padding:2px 4px;border-radius:6px}
+  .cs-lbl{font-size:.42rem}.cs-val{font-size:.75rem}.cs-sub{font-size:.4rem}
+  .ct-lvl{font-size:.6rem;padding:2px 8px}
+  .ct-bar-lbl{font-size:.45rem}.ct-hint{font-size:.5rem}
+  .die-scene{width:52px;height:52px;perspective:200px}
+  .die-cube{width:52px;height:52px}
+  .die-face{width:52px;height:52px;border-radius:8px;padding:6px}
+  .die-face.f1{transform:translateZ(26px)}.die-face.f6{transform:rotateY(180deg) translateZ(26px)}
+  .die-face.f2{transform:rotateY(90deg) translateZ(26px)}.die-face.f5{transform:rotateY(-90deg) translateZ(26px)}
+  .die-face.f3{transform:rotateX(-90deg) translateZ(26px)}.die-face.f4{transform:rotateX(90deg) translateZ(26px)}
+  .dot{width:8px;height:8px}.ct-dice-row{gap:8px}
+  .roll-btn{padding:7px 12px;font-size:.78rem;border-radius:9px}
+  .piece-scale{transform:scale(0.3)}
+  .mcard{max-width:92vw!important;padding:18px 14px!important;border-radius:16px!important;max-height:88vh;overflow-y:auto}
+  .m-emoji{font-size:2rem!important}.m-title{font-size:1rem!important}
+  .m-msg{font-size:.75rem;line-height:1.5}.m-btn{padding:9px;font-size:.8rem}
+  .m-frog svg{width:50px;height:50px}
+  .phil-box{padding:10px 12px}.phil-box summary{font-size:.7rem}.phil-box p{font-size:.68rem}
+  .ctag{font-size:.65rem;padding:4px 10px}
+  .ct-log{max-height:28px;padding:3px 6px}.le{font-size:.52rem}
+  .audio-ctrl{width:30px;height:30px;font-size:.85rem;top:10px;right:10px}
+}
+@media(max-width:380px){
+  :root{--C:36px}
+  .board{gap:1px;padding:3px;border-radius:10px}
+  .cell{border-radius:4px}.cell-ic{font-size:.72rem}
+  .die-scene{width:44px;height:44px;perspective:160px}
+  .die-cube{width:44px;height:44px}
+  .die-face{width:44px;height:44px;border-radius:6px;padding:4px}
+  .die-face.f1{transform:translateZ(22px)}.die-face.f6{transform:rotateY(180deg) translateZ(22px)}
+  .die-face.f2{transform:rotateY(90deg) translateZ(22px)}.die-face.f5{transform:rotateY(-90deg) translateZ(22px)}
+  .die-face.f3{transform:rotateX(-90deg) translateZ(22px)}.die-face.f4{transform:rotateX(90deg) translateZ(22px)}
+  .dot{width:6px;height:6px}.piece-scale{transform:scale(0.24)}
+  .cs-val{font-size:.65rem}.ct-title{font-size:.52rem}
+  .roll-btn{padding:6px 10px;font-size:.7rem}header h1{font-size:.85rem}
+}
 </style>
 </head>
 <body>
