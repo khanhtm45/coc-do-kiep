@@ -595,6 +595,28 @@ const FROG3D=`<div class="frog-3d mood-idle" id="frog3d">
    BOARD DATA  (28 squares, 0-27)
 ───────────────────────────────────── */
 const FINISH=27, WIN_TC=100;
+
+const QUIZ_DATA = [
+  { q: "Đối tượng nghiên cứu của Triết học Mác-Lênin là gì?", a: ["Các quy luật chung nhất của tự nhiên, xã hội và tư duy", "Các hiện tượng tâm linh", "Chỉ các quy luật của tự nhiên", "Các công thức toán học"], c: 0 },
+  { q: "Phép biện chứng duy vật có mấy nguyên lý cơ bản?", a: ["1", "2", "3", "4"], c: 1 },
+  { q: "Vật chất quyết định ý thức, hay ý thức quyết định vật chất theo quan điểm duy vật?", a: ["Vật chất quyết định ý thức", "Ý thức quyết định vật chất", "Cả hai độc lập", "Không bên nào quyết định"], c: 0 },
+  { q: "Quy luật 'Lượng - Chất' chỉ ra điều gì trong sự vận động?", a: ["Nguồn gốc", "Khuynh hướng", "Cách thức", "Tốc độ"], c: 2 },
+  { q: "Thực tiễn là hoạt động mang tính chất gì?", a: ["Cá nhân", "Trì trệ", "Vật chất có mục đích, lịch sử - xã hội", "Chỉ là lý thuyết"], c: 2 },
+  { q: "Theo Mác, 'Tôn giáo là thuốc phiện của...'?", a: ["Trí thức", "Nhân dân", "Trẻ em", "Giai cấp thống trị"], c: 1 },
+  { q: "Quy luật 'Phủ định của phủ định' chỉ ra điều gì?", a: ["Nguồn gốc", "Khuynh hướng phát triển", "Cách thức", "Mâu thuẫn"], c: 1 },
+  { q: "Cặp phạm trù nào phản ánh mối liên hệ giữa các mặt, các yếu tố trong một sự vật?", a: ["Cái chung - Cái riêng", "Nội dung - Hình thức", "Bản chất - Hiện tượng", "Tất cả các ý trên"], c: 3 },
+  { q: "Ai là người trực tiếp kế thừa và phát triển chủ nghĩa Mác trong giai đoạn đế quốc chủ nghĩa?", a: ["Hegel", "Kant", "Lênin", "Feuerbach"], c: 2 },
+  { q: "Phép biện chứng nào coi 'ý niệm tuyệt đối' là nguồn gốc của mọi sự vật?", a: ["Biện chứng duy vật", "Biện chứng duy tâm", "Biện chứng khách quan", "Biện chứng chủ quan"], c: 1 }
+];
+
+const CHANCE_CARDS = [
+  { txt: "Gặp Mác trong mơ: Khai sáng tư duy!", cr: 20, mv: 0, msg: "Bạn nhận được sự thông thái từ tổ sư. +20 TC" },
+  { txt: "Lạc vào chủ nghĩa duy tâm: Nhìn nhận sai thực tế!", cr: 0, mv: -2, msg: "Bạn bị ảo tưởng sức mạnh. Lùi 2 ô" },
+  { txt: "Đọc 'Nhà nước và Cách mạng': Hiểu thêm về chính trị!", cr: 15, mv: 1, msg: "Kiến thức là sức mạnh. +15 TC và tiến 1 ô" },
+  { txt: "Nghỉ tiết Triết đi đánh net: Quả báo nhãn tiền!", cr: -10, mv: 0, msg: "Bị trừ điểm chuyên cần. -10 TC và đi tới PHÒNG THI LẠI!", jail: true },
+  { txt: "Phát biểu xuất sắc trong giờ thảo luận!", cr: 10, mv: 0, msg: "Cây gậy và củ cà rốt. +10 TC" },
+  { txt: "Vi phạm quy trình thực tiễn: Làm bừa làm ẩu!", cr: -15, mv: -1, msg: "Bài học đắt giá. -15 TC và lùi 1 ô" }
+];
 const boardData=[
 /*0*/ {t:"start",    ic:"🏫",nm:"XUẤT PHÁT",     lbl:"FPT University – Kỳ 1 bắt đầu!"},
 /*1*/ {t:"normal",   ic:"📋",nm:"Orientation",   lbl:"Tuần định hướng FPT, làm quen bạn bè."},
@@ -642,7 +664,7 @@ const boardData=[
        effect:"Nhận học bổng danh giá, giảm học phí, cộng 20 tín chỉ",
        phil:"Tích lũy đủ LƯỢNG (GPA cao liên tục) → bước nhảy vọt về CHẤT (học bổng).",
        cr:+20,mv:+2},
-/*14*/{t:"normal",  ic:"🌐",nm:"Nửa Đường",    lbl:"Đã qua nửa hành trình! Kiên trì lên!"},
+/*14*/{t:"chance",  ic:"❓",nm:"VẬN MAY",       lbl:"Rút một thẻ ngẫu nhiên!"},
 /*15*/{t:"event_bad",ic:"📋",nm:"Đạo Văn",
        cause:"Lười biếng, copy paste báo cáo không chỉnh sửa",
        effect:"Bị phát hiện, ăn 0 điểm cả môn, bị kỷ luật",
@@ -1173,6 +1195,8 @@ function movePlayer(steps,silent){
           const sq=boardData[finalTo];
           if(finalTo===FINISH){checkFinish();}
           else if(sq.t==='event_good'||sq.t==='event_bad'){showEventModal(sq);}
+          else if(sq.t==='chance'){showChanceModal();}
+          else if(sq.t==='quiz'){showQuizModal();}
           else{
             const rh=document.getElementById('rollHint');
             if(rh)rh.textContent=`📍 ${sq.nm.replace(/\n/g,' ')} – Nhấn để tiếp tục!`;
@@ -1273,7 +1297,6 @@ function showEventModal(sq){
         if(diff>0) spawnSparkle(center.x, center.y);
       }
       updateUI();
-      const diff=PLAYERS[curP].cr-prev;
       if(diff>0)addLog(`💰 +${diff} tín chỉ! Tổng: ${PLAYERS[curP].cr}`,'good');
       else if(diff<0)addLog(`💸 ${diff} tín chỉ! Còn: ${PLAYERS[curP].cr}`,'bad');
       if(sq.mv!==0){
@@ -1289,6 +1312,125 @@ function showEventModal(sq){
       }
     }
   });
+}
+
+/* ─────────────────────────────────────
+   CHANCE MODAL (VậN MAY / RỦI RO)
+───────────────────────────────────── */
+function showChanceModal(){
+  const c = CHANCE_CARDS[Math.floor(Math.random() * CHANCE_CARDS.length)];
+  const good = c.cr >= 0 && !c.jail;
+  beep(good ? 'good' : 'bad');
+  setFrogMood(good ? 'happy' : 'sad');
+  if (!good) shakeBoard();
+
+  setModal({
+    cardClass: good ? 'good' : 'bad', emoji: '❓', title: 'VẬN MAY / RỦI RO',
+    msg: `<p style="font-size:1.1rem;margin:15px 0">${c.txt}</p><p>${c.msg}</p>`,
+    btnClass: good ? 'green' : 'red', btnText: 'Chấp nhận!',
+    showFrog: true,
+    cb() {
+      setFrogMood('idle');
+      if (c.jail) {
+        // Go to jail logic
+        PLAYERS[curP].cr = Math.max(0, PLAYERS[curP].cr + c.cr);
+        PLAYERS[curP].skipTurns = 2;
+        updateUI();
+        addLog(`🚔 Bị đưa vào Phòng Thi Lại! Nghỉ 2 lượt.`, 'bad');
+        PLAYERS[curP].pos = 7;
+        placePlayer();
+        busy = false; document.getElementById('rollBtn').disabled = false; nextTurn();
+      } else {
+        const prev = PLAYERS[curP].cr;
+        PLAYERS[curP].cr = Math.max(0, PLAYERS[curP].cr + c.cr);
+        const diff = PLAYERS[curP].cr - prev;
+        const center = getCellCenter(PLAYERS[curP].pos);
+        if (center && diff !== 0) {
+          spawnFloatingText((diff > 0 ? '+' : '') + diff, diff > 0 ? 'pos' : 'neg', center.x, center.y);
+          if (diff > 0) spawnSparkle(center.x, center.y);
+        }
+        updateUI();
+        if (diff > 0) addLog(`💰 +${diff} tín chỉ! Tổng: ${PLAYERS[curP].cr}`, 'good');
+        else if (diff < 0) addLog(`💸 ${diff} tín chỉ! Còn: ${PLAYERS[curP].cr}`, 'bad');
+        if (c.mv !== 0) {
+          setTimeout(() => {
+            addLog(`${c.mv > 0 ? '⏩ Tiến' : '⏪ Lùi'} thêm ${Math.abs(c.mv)} ô!`, c.mv > 0 ? 'good' : 'bad');
+            movePlayer(c.mv, true);
+            setTimeout(() => { busy = false; document.getElementById('rollBtn').disabled = false; nextTurn(); }, 550);
+          }, 150);
+        } else {
+          busy = false; document.getElementById('rollBtn').disabled = false; nextTurn();
+        }
+      }
+    }
+  });
+}
+
+/* ─────────────────────────────────────
+   QUIZ MODAL (VẤN ĐÁP TRIẾT HỌC)
+───────────────────────────────────── */
+function showQuizModal(){
+  const q = QUIZ_DATA[Math.floor(Math.random() * QUIZ_DATA.length)];
+  beep('roll');
+  setFrogMood('excited');
+
+  // Build answer buttons HTML
+  const answersHtml = q.a.map((ans, i) =>
+    `<button class="m-btn orange" style="display:block;width:100%;margin:6px 0;text-align:left;padding:10px 14px" data-idx="${i}">${ans}</button>`
+  ).join('');
+
+  setModal({
+    cardClass: 'good', emoji: '🎓', title: 'VẤN ĐÁP TRIẾT HỌC',
+    msg: `<p style="font-weight:700;margin-bottom:15px">${q.q}</p>${answersHtml}`,
+    btnClass: 'orange', btnText: '',
+    showFrog: true,
+    cb() {} // dummy, actual handling via answer buttons
+  });
+
+  // Hide the default button, use answer buttons instead
+  setTimeout(() => {
+    const defaultBtn = document.querySelector('.m-btn.orange:not([data-idx])');
+    if (defaultBtn) defaultBtn.style.display = 'none';
+
+    document.querySelectorAll('.m-btn[data-idx]').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const idx = parseInt(this.dataset.idx);
+        const isCorrect = (idx === q.c);
+        const cr = isCorrect ? 20 : -10;
+
+        // Disable all answer buttons
+        document.querySelectorAll('.m-btn[data-idx]').forEach(b => { b.disabled = true; b.style.opacity = '0.5'; });
+        // Highlight correct answer
+        document.querySelector(`.m-btn[data-idx="${q.c}"]`).style.background = 'var(--gd)';
+        document.querySelector(`.m-btn[data-idx="${q.c}"]`).style.opacity = '1';
+        if (!isCorrect) {
+          this.style.background = 'var(--rd)';
+          this.style.opacity = '1';
+        }
+
+        beep(isCorrect ? 'good' : 'bad');
+        setFrogMood(isCorrect ? 'happy' : 'sad');
+        if (!isCorrect) shakeBoard();
+
+        setTimeout(() => {
+          closeModal();
+          const prev = PLAYERS[curP].cr;
+          PLAYERS[curP].cr = Math.max(0, PLAYERS[curP].cr + cr);
+          const diff = PLAYERS[curP].cr - prev;
+          const center = getCellCenter(PLAYERS[curP].pos);
+          if (center && diff !== 0) {
+            spawnFloatingText((diff > 0 ? '+' : '') + diff, diff > 0 ? 'pos' : 'neg', center.x, center.y);
+            if (diff > 0) spawnSparkle(center.x, center.y);
+          }
+          updateUI();
+          if (isCorrect) addLog(`✅ Trả lời đúng! +20 TC. Tổng: ${PLAYERS[curP].cr}`, 'good');
+          else addLog(`❌ Trả lời sai! -10 TC. Còn: ${PLAYERS[curP].cr}`, 'bad');
+          setFrogMood('idle');
+          busy = false; document.getElementById('rollBtn').disabled = false; nextTurn();
+        }, 1200);
+      });
+    });
+  }, 50);
 }
 
 /* ─────────────────────────────────────

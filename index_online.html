@@ -3381,6 +3381,9 @@
                 });
               } else {
                 socket.emit('sync_credits', { cr: c.cr, mv: c.mv });
+                if (c.mv === 0) {
+                  nextTurnLoc();
+                }
               }
             }
           }
