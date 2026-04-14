@@ -78,6 +78,41 @@ io.on('connection', (socket) => {
     io.to(code).emit('lobby_update', room.players);
   });
 
+  // Rejoin: when a player refreshes during an active game
+  socket.on('rejoin_room', ({ code, playerName }) => {
+    code = code.toUpperCase();
+    const room = ROOMS[code];
+    if (!room) {
+      return socket.emit('error_msg', 'Phòng không tồn tại hoặc đã kết thúc!');
+    }
+
+    // Find the player by name
+    const player = room.players.find(p => p.nm === playerName);
+    if (!player) {
+      return socket.emit('error_msg', 'Không tìm thấy tên của bạn trong phòng!');
+    }
+
+    // Update socket references
+    player.sid = socket.id;
+    socket.join(code);
+    socket.roomId = code;
+    socket.playerId = player.id;
+
+    console.log(`[Rejoin] ${playerName} rejoined room ${code} as P${player.id}`);
+
+    if (room.isPlaying) {
+      // Game is in progress — send full state to the reconnecting player
+      socket.emit('rejoin_state', {
+        players: room.players,
+        curP: room.curP,
+        myPlayerId: player.id
+      });
+    } else {
+      // Still in lobby
+      io.to(code).emit('lobby_update', room.players);
+    }
+  });
+
   socket.on('start_game', () => {
     const room = ROOMS[socket.roomId];
     if (room && room.players.length > 0) {

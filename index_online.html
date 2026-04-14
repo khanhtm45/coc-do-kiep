@@ -2927,12 +2927,17 @@
     // ── LOBBY NETWORK EVENTS ──
     function createRoom() {
       const name = document.getElementById('playerNameInput').value.trim();
+      sessionStorage.setItem('cocPlayerName', name);
       socket.emit('create_room', name);
     }
     function joinRoom() {
       const code = document.getElementById('roomCodeInput').value.trim();
       const name = document.getElementById('playerNameInput').value.trim();
-      if (code) socket.emit('join_room', { code, playerName: name });
+      if (code) {
+        sessionStorage.setItem('cocPlayerName', name);
+        sessionStorage.setItem('cocRoomCode', code.toUpperCase());
+        socket.emit('join_room', { code, playerName: name });
+      }
     }
     function startGame() { socket.emit('start_game'); }
 
@@ -2958,13 +2963,36 @@
       curP = data.curP;
       renderBoard();
       updateUI();
-      // Ensure the button state matches the current turn immediately
       if (myPlayerId !== PLAYERS[curP].id) {
         busy = true; if (document.getElementById('rollBtn')) document.getElementById('rollBtn').disabled = true;
       } else {
         busy = false; if (document.getElementById('rollBtn')) document.getElementById('rollBtn').disabled = false;
       }
       addLog('🎮 Game đã bắt đầu!');
+    });
+
+    // ── REJOIN: Restore game state after F5/refresh ──
+    socket.on('rejoin_state', data => {
+      console.log('[Rejoin] Restoring game state...');
+      document.getElementById('lobby').classList.add('hidden');
+      PLAYERS = data.players;
+      curP = data.curP;
+      myPlayerId = data.myPlayerId;
+      renderBoard();
+      updateUI();
+      placePlayer();
+      if (myPlayerId !== PLAYERS[curP].id) {
+        busy = true; if (document.getElementById('rollBtn')) document.getElementById('rollBtn').disabled = true;
+      } else {
+        busy = false; if (document.getElementById('rollBtn')) document.getElementById('rollBtn').disabled = false;
+      }
+      setFrogMood('idle');
+      addLog('🔄 Đã kết nối lại thành công! Tiếp tục chơi...', 'sys');
+      const rh = document.getElementById('rollHint');
+      if (rh) {
+        if (myPlayerId === PLAYERS[curP].id) rh.textContent = '🎲 Tới lượt bạn! Hãy tung xúc xắc!';
+        else rh.textContent = `Đang chờ ${PLAYERS[curP].nm}...`;
+      }
     });
 
     // ── IN-GAME NETWORK EVENTS ──
@@ -3588,6 +3616,16 @@
       const audioBtn = document.getElementById('audioToggle');
       if (audioBtn) {
         audioBtn.addEventListener('click', () => audio.toggle());
+      }
+
+      // Auto-rejoin if we have session data (F5/refresh)
+      const savedRoom = sessionStorage.getItem('cocRoomCode');
+      const savedName = sessionStorage.getItem('cocPlayerName');
+      if (savedRoom && savedName) {
+        console.log(`[Rejoin] Attempting to rejoin room ${savedRoom} as ${savedName}...`);
+        document.getElementById('playerNameInput').value = savedName;
+        document.getElementById('roomCodeInput').value = savedRoom;
+        socket.emit('rejoin_room', { code: savedRoom, playerName: savedName });
       }
       
       // renderBoard is now deferred until game_started socket event
