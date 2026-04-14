@@ -240,11 +240,13 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('User disconnected:', socket.id);
     const room = ROOMS[socket.roomId];
-    if (room && !room.isPlaying) {
-      // Remove from lobby
-      room.players = room.players.filter(p => p.sid !== socket.id);
+    if (room) {
+      // Instead of immediately deleting the player, we keep them in the room
+      // so if they F5, their slot is still available for rejoin_room.
+      
+      // We can broadcast that a player is offline, but for this board game,
+      // it's fine to just leave their slot intact to allow smooth reconnects.
       io.to(socket.roomId).emit('lobby_update', room.players);
-      if(room.players.length === 0) delete ROOMS[socket.roomId];
     }
   });
 });
